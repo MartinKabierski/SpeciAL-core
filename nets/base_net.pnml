@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<pnml>
+<net id="" type="http://www.pnml.org/version-2009/grammar/ptnet">
+<name>
+<text>ILovePetriNets.pnml</text>
+</name>
+<place id="p1">
+<name>
+</name>
+<graphics>
+<position x="502" y="216.06666564941406"/>
+</graphics>
+<initialMarking>
+<text>1</text>
+</initialMarking>
+</place><place id="p2">
+<name>
+</name>
+<graphics>
+<position x="792" y="216.06666564941406"/>
+</graphics>
+<initialMarking>
+<text>0</text>
+</initialMarking>
+</place><place id="p3">
+<name>
+</name>
+<graphics>
+<position x="1120" y="217.066650390625"/>
+</graphics>
+<initialMarking>
+<text>0</text>
+</initialMarking>
+</place><transition id="t1"><name><text>A</text></name><graphics><position x="650" y="102.06666564941406"/></graphics></transition><transition id="t2"><name><text>A</text></name><graphics><position x="772" y="79.06666564941406"/></graphics></transition><transition id="t3"><name><text>A</text></name><graphics><position x="854" y="82.06666564941406"/></graphics></transition><transition id="t4"><name><text>A</text></name><graphics><position x="960" y="121.06666564941406"/></graphics></transition><transition id="t5"><name><text>B</text></name><graphics><position x="601" y="371.06666564941406"/></graphics></transition><transition id="t6"><name><text>B</text></name><graphics><position x="669" y="440.06666564941406"/></graphics></transition><transition id="t7"><name><text>B</text></name><graphics><position x="760" y="495.06666564941406"/></graphics></transition><transition id="t8"><name><text>C</text></name><graphics><position x="863" y="470.06666564941406"/></graphics></transition><transition id="t9"><name><text>C</text></name><graphics><position x="935" y="437.06666564941406"/></graphics></transition><transition id="t10"><name><text></text></name><graphics><position x="622" y="215.06666564941406"/></graphics>        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="231b4c9e-6ad5-4bf2-9098-022330e198ae"/></transition><transition id="t11"><name><text></text></name><graphics><position x="986" y="216.06666564941406"/></graphics>        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="231b4c9e-6ad5-4bf2-9098-022330e198ae"/></transition><transition id="t12"><name><text>D</text></name><graphics><position x="1001" y="380.066650390625"/></graphics></transition>
+<arc id="p1,t10" source="p1" target="t10">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="t10,p2" source="t10" target="p2">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="p2,t11" source="p2" target="t11">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="t11,p3" source="t11" target="p3">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="p2,t1" source="p2" target="t1">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="t1,p2" source="t1" target="p2">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="p2,t2" source="p2" target="t2">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="t2,p2" source="t2" target="p2">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="p2,t3" source="p2" target="t3">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="t3,p2" source="t3" target="p2">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="p2,t4" source="p2" target="t4">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="t4,p2" source="t4" target="p2">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="p2,t9" source="p2" target="t9">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="t9,p2" source="t9" target="p2">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="p2,t8" source="p2" target="t8">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="t8,p2" source="t8" target="p2">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="p2,t7" source="p2" target="t7">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="t7,p2" source="t7" target="p2">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="p2,t6" source="p2" target="t6">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="t6,p2" source="t6" target="p2">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="p2,t5" source="p2" target="t5">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="t5,p2" source="t5" target="p2">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="p2,t12" source="p2" target="t12">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+<arc id="t12,p2" source="t12" target="p2">
+<graphics>
+</graphics>
+
+<inscription><text>1</text></inscription>
+</arc>
+    <finalmarkings>
+      <marking>
+        <place idref="p3">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+</net>
+</pnml>
