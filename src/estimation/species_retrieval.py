@@ -3,11 +3,10 @@ from datetime import datetime, timedelta
 
 import pm4py
 
-
 def retrieve_species_n_gram(trace, n):
     if len(trace) < n:
         return ["NULL"]
-    events = [x.get("concept:name") for x in trace]
+    events = [x['concept:name'] for x in trace]
 
     if n >= 2:
         events.insert(0, "START")
@@ -16,7 +15,7 @@ def retrieve_species_n_gram(trace, n):
 
 
 def retrieve_species_trace_variant(trace):
-    return [",".join([x.get("concept:name") for x in trace])]
+    return [",".join([x["concept:name"] for x in trace])]
 
 
 def retrieve_timed_activity(trace, interval_size):

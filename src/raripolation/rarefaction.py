@@ -1,6 +1,6 @@
 import math
 from functools import cache
-from metrics import get_incidence_count
+from src.estimation.metrics import get_incidence_count
 import gmpy2
 
 

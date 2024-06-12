@@ -5,7 +5,7 @@ import pm4py
 
 import species_estimator
 import species_retrieval
-from simulation import simulate_model
+from src.simulation import simulate_model
 
 
 def profile_log(log, name):
@@ -52,15 +52,15 @@ def profile_log(log, name):
 
 
 
-log = pm4py.read_xes("./logs/Sepsis_Cases_-_Event_Log.xes", return_legacy_log_object=True)
+log = pm4py.read_xes("../../logs/Road_Traffic_Fines_Management_Process.xes", return_legacy_log_object=True)
 
 print("###1###")
 mod, i, f = pm4py.discover_petri_net_alpha(log)
 #print(i,f)
-pm4py.save_vis_petri_net(mod, i, f, "SEPSIS_ALPHA_pm4py.pdf")
+pm4py.save_vis_petri_net(mod, i, f, "RTF_ALPHA_pm4py.pdf")
 log_d_alpha = simulate_model(mod, i, f, 1, 5000)
 #print(log_d_alpha[0])
-profile_log(log_d_alpha[0], "log_vs_model_SEPSIS_eval_alpha_pm4py")
+profile_log(log_d_alpha[0], "log_vs_model_RTF_eval_alpha_pm4py")
 #print()
 
 #print("###1.5###")
@@ -73,106 +73,106 @@ profile_log(log_d_alpha[0], "log_vs_model_SEPSIS_eval_alpha_pm4py")
 print("###2.1###")
 mod2, i, f = pm4py.discover_petri_net_inductive(log, noise_threshold=0.2)
 print(i,f)
-pm4py.save_vis_petri_net(mod2, i, f, "SEPSIS_INDUCTIVE_infrequent_0.2_pm4py.pdf")
+pm4py.save_vis_petri_net(mod2, i, f, "RTF_INDUCTIVE_infrequent_0.2_pm4py.pdf")
 log_d_ind = simulate_model(mod2, i, f, 1, 5000)
-profile_log(log_d_ind[0], "log_vs_model_eval_SEPSIS_inductive_infrequent_0.2_pm4py")
+profile_log(log_d_ind[0], "log_vs_model_eval_RTF_inductive_infrequent_0.2_pm4py")
 
 print("###2.2###")
 mod2, i, f = pm4py.discover_petri_net_inductive(log, noise_threshold=0.4)
 print(i,f)
-pm4py.save_vis_petri_net(mod2, i, f, "SEPSIS_INDUCTIVE_infrequent_0.4_pm4py.pdf")
+pm4py.save_vis_petri_net(mod2, i, f, "RTF_INDUCTIVE_infrequent_0.4_pm4py.pdf")
 log_d_ind = simulate_model(mod2, i, f, 1, 5000)
-profile_log(log_d_ind[0], "log_vs_model_eval_SEPSIS_inductive_infrequent_0.4_pm4py")
+profile_log(log_d_ind[0], "log_vs_model_eval_RTF_inductive_infrequent_0.4_pm4py")
 
 
 print("###2.3###")
 mod2, i, f = pm4py.discover_petri_net_inductive(log, noise_threshold=0.6)
 print(i,f)
-pm4py.save_vis_petri_net(mod2, i, f, "SEPSIS_INDUCTIVE_infrequent_0.6_pm4py.pdf")
+pm4py.save_vis_petri_net(mod2, i, f, "RTF_INDUCTIVE_infrequent_0.6_pm4py.pdf")
 log_d_ind = simulate_model(mod2, i, f, 1, 5000)
-profile_log(log_d_ind[0], "log_vs_model_eval_SEPSIS_inductive_infrequent_0.6_pm4py")
+profile_log(log_d_ind[0], "log_vs_model_eval_RTF_inductive_infrequent_0.6_pm4py")
 
 
 print("###2.4###")
 mod2, i, f = pm4py.discover_petri_net_inductive(log, noise_threshold=0.8)
 print(i,f)
-pm4py.save_vis_petri_net(mod2, i, f, "SEPSIS_INDUCTIVE_infrequent_0.8_pm4py.pdf")
+pm4py.save_vis_petri_net(mod2, i, f, "RTF_INDUCTIVE_infrequent_0.8_pm4py.pdf")
 log_d_ind = simulate_model(mod2, i, f, 1, 5000)
-profile_log(log_d_ind[0], "log_vs_model_eval_SEPSIS_inductive_infrequent_0.8_pm4py")
+profile_log(log_d_ind[0], "log_vs_model_eval_RTF_inductive_infrequent_0.8_pm4py")
 
 print("###2.5###")
 mod2, i, f = pm4py.discover_petri_net_inductive(log, noise_threshold=0.0)
 print(i,f)
-pm4py.save_vis_petri_net(mod2, i, f, "SEPSIS_INDUCTIVE_0.0_pm4py.pdf")
+pm4py.save_vis_petri_net(mod2, i, f, "RTF_INDUCTIVE_0.0_pm4py.pdf")
 log_d_ind = simulate_model(mod2, i, f, 1, 5000)
-profile_log(log_d_ind[0], "log_vs_model_eval_SEPSIS_inductive_0.0_pm4py")
+profile_log(log_d_ind[0], "log_vs_model_eval_RTF_inductive_0.0_pm4py")
 
 print("###3.1###")
 mod3, i, f = pm4py.discover_petri_net_ilp(log, alpha=1.0)
 print(i,f)
-pm4py.save_vis_petri_net(mod3, i, f, "SEPSIS_ILP_1.0_pm4py.pdf")
+pm4py.save_vis_petri_net(mod3, i, f, "RTF_ILP_1.0_pm4py.pdf")
 log_d_ind2 = simulate_model(mod3, i, f, 1, 5000)
-profile_log(log_d_ind2[0], "log_vs_model_eval_SEPSIS_ilp_1.0_pm4py")
+profile_log(log_d_ind2[0], "log_vs_model_eval_RTF_ilp_1.0_pm4py")
 
 print("###3.2###")
 mod3, i, f = pm4py.discover_petri_net_ilp(log, alpha=0.8)
 print(i,f)
-pm4py.save_vis_petri_net(mod3, i, f, "SEPSIS_ILP_0.8_pm4py.pdf")
+pm4py.save_vis_petri_net(mod3, i, f, "RTF_ILP_0.8_pm4py.pdf")
 log_d_ind2 = simulate_model(mod3, i, f, 1, 5000)
-profile_log(log_d_ind2[0], "log_vs_model_eval_SEPSIS_ilp_0.8_pm4py")
+profile_log(log_d_ind2[0], "log_vs_model_eval_RTF_ilp_0.8_pm4py")
 
 print("###3.2###")
 mod3, i, f = pm4py.discover_petri_net_ilp(log, alpha=0.7)
 print(i,f)
-pm4py.save_vis_petri_net(mod3, i, f, "SEPSIS_ILP_0.7_pm4py.pdf")
+pm4py.save_vis_petri_net(mod3, i, f, "RTF_ILP_0.7_pm4py.pdf")
 log_d_ind2 = simulate_model(mod3, i, f, 1, 5000)
-profile_log(log_d_ind2[0], "log_vs_model_eval_SEPSIS_ilp_0.7_pm4py")
+profile_log(log_d_ind2[0], "log_vs_model_eval_RTF_ilp_0.7_pm4py")
 
 print("###3.3###")
 mod3, i, f = pm4py.discover_petri_net_ilp(log, alpha=0.6)
 print(i,f)
-pm4py.save_vis_petri_net(mod3, i, f, "SEPSIS_ILP_0.6_pm4py.pdf")
+pm4py.save_vis_petri_net(mod3, i, f, "RTF_ILP_0.6_pm4py.pdf")
 log_d_ind2 = simulate_model(mod3, i, f, 1, 5000)
-profile_log(log_d_ind2[0], "log_vs_model_eval_SEPSIS_ilp_0.6_pm4py")
+profile_log(log_d_ind2[0], "log_vs_model_eval_RTF_ilp_0.6_pm4py")
 
 print("###3.4###")
 mod3, i, f = pm4py.discover_petri_net_ilp(log, alpha=0.4)
 print(i,f)
-pm4py.save_vis_petri_net(mod3, i, f, "SEPSIS_ILP_0.4_pm4py.pdf")
+pm4py.save_vis_petri_net(mod3, i, f, "RTF_ILP_0.4_pm4py.pdf")
 log_d_ind2 = simulate_model(mod3, i, f, 1, 5000)
-profile_log(log_d_ind2[0], "log_vs_model_eval_SEPSIS_ilp_0.4_pm4py")
+profile_log(log_d_ind2[0], "log_vs_model_eval_RTF_ilp_0.4_pm4py")
 
 print("###3.5###")
 mod3, i, f = pm4py.discover_petri_net_ilp(log, alpha=0.2)
 print(i,f)
-pm4py.save_vis_petri_net(mod3, i, f, "SEPSIS_ILP_0.2_pm4py.pdf")
+pm4py.save_vis_petri_net(mod3, i, f, "RTF_ILP_0.2_pm4py.pdf")
 log_d_ind2 = simulate_model(mod3, i, f, 1, 5000)
-profile_log(log_d_ind2[0], "log_vs_model_eval_SEPSIS_ilp_0.2_pm4py")
+profile_log(log_d_ind2[0], "log_vs_model_eval_RTF_ilp_0.2_pm4py")
 
 
 # print("###5###")
-# net, im, fm = pm4py.read_pnml("nets/bpi_2012_alpha.pnml")
+# net, im, fm = pm4py.read_pnml("models/bpi_2012_alpha.pnml")
 # print(im,fm)
 # pm4py.save_vis_petri_net(net, im, fm, "ALPHA.pdf")
 # log_alpha = simulate_model(net, im, fm, 1, 20000)
 # profile_log(log_alpha[0], "log_vs_model_eval_alpha")
 #
 # print("###6###")
-# net, im, fm = pm4py.read_pnml("nets/bpi_2012_im.pnml")
+# net, im, fm = pm4py.read_pnml("models/bpi_2012_im.pnml")
 # print(im,fm)
 # pm4py.save_vis_petri_net(net, im, fm,"INDUCTIVE.pdf")
 # log_im = simulate_model(net, im, fm, 1, 20000)
 # profile_log(log_im[0], "log_vs_model_eval_inductive")
 #
 # print("###7###")
-# net, im, fm = pm4py.read_pnml("nets/bpi_2012_im_infrequent.pnml")
+# net, im, fm = pm4py.read_pnml("models/bpi_2012_im_infrequent.pnml")
 # print(im,fm)
 # pm4py.save_vis_petri_net(net, im, fm, "INDUCTIVE_infrequent.pdf")
 # log_im_infrequent = simulate_model(net, im, fm, 1, 20000)
 # profile_log(log_im_infrequent[0], "log_vs_model_eval_inductive_infrequent")
 
 #print("###8###")
-#net, im, fm = pm4py.read_pnml("nets/bpi_2012_im_incomplete.pnml")
+#net, im, fm = pm4py.read_pnml("models/bpi_2012_im_incomplete.pnml")
 #pm4py.save_vis_petri_net(net, im, fm, "INDUCTIVE_incomplete.pdf")
 #log_im_incomplete = simulate_model(net, im, fm, 1, 20000)
 #profile_log(log_im_incomplete[0], "log_vs_model_eval_inductive_incomplete")

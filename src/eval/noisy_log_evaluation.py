@@ -7,10 +7,8 @@ from functools import partial
 
 from plots import plot_rank_abundances_multiple_estimators
 from species_estimator import SpeciesEstimator
-from simulation import simulate_model
+from src.simulation import simulate_model
 import pm4py
-import numpy as np
-from matplotlib import pyplot as plt
 import random
 
 #plt.style.use('seaborn-v0_8-ticks')
@@ -33,7 +31,7 @@ def profile_logs(log_dict):
                                            quantify_all=True),
                 "5-gram": SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=5),
                                            quantify_all=True),
-                "trace_variants": SpeciesEstimator(species_retrieval.retrieve_species_trace_variant,quantify_all=True)
+                "trace_variants": SpeciesEstimator(species_retrieval.retrieve_species_trace_variant, quantify_all=True)
             }
 
         for key, est in estimators.items():
@@ -63,7 +61,7 @@ def profile_logs(log_dict):
 
 
 
-net, im, fm = pm4py.read_pnml("./nets/base_net.pnml")
+net, im, fm = pm4py.read_pnml("../../models/base_net.pnml")
 #pm4py.view_petri_net(net, im, fm)
 
 simulated_log = simulate_model(net, im, fm, 1, 1000)

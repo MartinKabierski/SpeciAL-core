@@ -5,11 +5,13 @@ import statistics
 
 import pandas as pd
 
-import species_estimator
-import species_retrieval
-from plots import plot_rank_abundance, plot_all_stats
-from simulation import simulate_model
-from species_estimator import SpeciesEstimator
+import src.estimation.species_estimator
+import src.estimation.species_retrieval
+from src.estimation import species_estimator, species_retrieval
+from src.simulation.simulation import simulate_model
+from src.visualizations.plots import plot_rank_abundance, plot_all_stats
+from src.simulation import simulation
+from src.estimation.species_estimator import SpeciesEstimator
 from functools import partial
 from tqdm import tqdm
 
@@ -35,6 +37,7 @@ def summarize_metrics_reference_samples(estimations):
 
 
 def profile_logs(logs):
+    #TODO make this a dictionary
     estimations_per_species = [[], [], [], [], [], []]
     for log in tqdm(logs, desc='Evaluating logs'):
         results = profile_log(log)
@@ -68,6 +71,7 @@ def evaluate_model(path, name, repetitions, log_size):
 
     for result, estimator_name in zip(results_per_species, ESTIMATORS):
         print(name + " - " + estimator_name)
+        #TODO summary statistics post-hoc to the csv as df.describe() and df.info()
         summary_df = summarize_metrics_reference_samples(result)
         summary_df.to_csv("results/baseline_eval_"+name+"_"+estimator_name+"_summary.csv")
         plot_rank_abundance(result[0], name + "_" + estimator_name)
@@ -83,12 +87,13 @@ def evaluate_model(path, name, repetitions, log_size):
         plot_all_stats(result, name + "_" + estimator_name, [0, 50, 100], [0,1000,2000])
 
 
-#evaluate_model("./nets/Net1.pnml", "baseline_eval_model_1", 100, 2000)
-#evaluate_model("./nets/Net2.pnml", "baseline_eval_model_2", 100, 2000)
-#evaluate_model("./nets/Net4.pnml", "baseline_eval_model_4", 100, 1000)
-#evaluate_model("./nets/Net5.pnml", "baseline_eval_model_5", 100, 1000)
-#evaluate_model("./nets/Net6.pnml", "baseline_eval_model_6", 100, 1000)
-#evaluate_model("./nets/Net8.pnml", "baseline_eval_model_8_LARGE", 100, 5000)
-#evaluate_model("./nets/Net7.pnml", "baseline_eval_model_7_LARGE", 100, 5000)
+#evaluate_model("./models/model_1.pnml", "baseline_eval_model_1", 100, 2000)
+#evaluate_model("./models/model_2.pnml", "baseline_eval_model_2", 100, 2000)
+#evaluate_model("./models/model_4.pnml", "baseline_eval_model_4", 100, 1000)
+#evaluate_model("./models/model_5.pnml", "baseline_eval_model_5", 100, 1000)
+#evaluate_model("./models/model_6.pnml", "baseline_eval_model_6", 100, 1000)
 
-evaluate_model("./nets/Net3.pnml", "baseline_eval_model_3", 50, 2000)
+#Used in Evaluation
+evaluate_model("../../models/model_3.pnml", "baseline_eval_model_3", 100, 2000)
+#evaluate_model("./models/model_7.pnml", "baseline_eval_model_7_LARGE", 100, 5000)
+#evaluate_model("./models/morel_8.pnml", "baseline_eval_model_8_LARGE", 100, 5000)

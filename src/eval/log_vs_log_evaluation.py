@@ -25,10 +25,11 @@ def profile_log(log, name):
                                                          quantify_all=True),
             "trace_variants": species_estimator.SpeciesEstimator(species_retrieval.retrieve_species_trace_variant,
                                                                  quantify_all=True),
-            "est_act_1" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity,interval_size=1), quantify_all=True),
-            "est_act_5" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity,interval_size=5),quantify_all=True),
-            "est_act_30" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity,interval_size=30), quantify_all=True),
-            "est_act_exp" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity_exponential), quantify_all=True)
+            "est_act_1" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity, interval_size=1), quantify_all=True),
+            "est_act_5" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity, interval_size=5), quantify_all=True),
+            "est_act_30" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity, interval_size=30), quantify_all=True),
+            "est_act_exp" : species_estimator.SpeciesEstimator(partial(
+                species_retrieval.retrieve_timed_activity_exponential), quantify_all=True)
         }
     metrics_stats = {}
     print("Profiling log " + name)
@@ -58,7 +59,7 @@ def profile_log(log, name):
 
 
 
-log = pm4py.read_xes("./logs/Sepsis_Cases_-_Event_Log.xes", return_legacy_log_object=True)
+log = pm4py.read_xes("../../logs/Sepsis_Cases_-_Event_Log.xes", return_legacy_log_object=True)
 
 log_pre_admission = copy.deepcopy(log)
 log_post_admission = copy.deepcopy(log)

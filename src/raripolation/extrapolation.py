@@ -1,5 +1,5 @@
 import math
-from metrics import get_singletons
+from src.estimation.metrics import get_singletons
 
 
 def extrapolate_richness_abundance(reference_sample, sample_size, richness, data_points=100):

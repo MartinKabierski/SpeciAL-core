@@ -4,12 +4,9 @@ from pandas import DataFrame
 
 import species_retrieval
 import species_estimator
-import pandas as pd
-import numpy as np
-from matplotlib import pyplot as plt
 
 from plots import plot_all_stats
-from simulation import simulate_model
+from src.simulation import simulate_model
 import pm4py
 import copy
 
@@ -245,22 +242,22 @@ def profile_log(log, name, tick_locations=[20,40,60,80,100], tick_names=[200,400
 BASE_LENGTH = 1000
 MODIFIED_LENGTH = 1000
 
-net, im, fm = pm4py.read_pnml("./nets/base_net.pnml")
+net, im, fm = pm4py.read_pnml("../../models/base_net.pnml")
 #pm4py.view_petri_net(net, im, fm)
 
 base_log = simulate_model(net, im, fm, 1, BASE_LENGTH)
 
-net, im, fm = pm4py.read_pnml("./nets/net_added_e.pnml")
+net, im, fm = pm4py.read_pnml("../../models/net_added_e.pnml")
 #pm4py.view_petri_net(net, im, fm)
 
 added_e_log = simulate_model(net, im, fm, 1, MODIFIED_LENGTH)
 
-net, im, fm = pm4py.read_pnml("./nets/net_removed_b.pnml")
+net, im, fm = pm4py.read_pnml("../../models/net_removed_b.pnml")
 #pm4py.view_petri_net(net, im, fm)
 
 removed_b_log = simulate_model(net, im, fm, 1, MODIFIED_LENGTH)
 
-net, im, fm = pm4py.read_pnml("./nets/net_equal_prob.pnml")
+net, im, fm = pm4py.read_pnml("../../models/net_equal_prob.pnml")
 #pm4py.view_petri_net(net, im, fm)
 
 equal_prob_log = simulate_model(net, im, fm, 1, MODIFIED_LENGTH)

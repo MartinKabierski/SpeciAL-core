@@ -3,11 +3,9 @@ import species_retrieval
 from functools import partial
 import pm4py
 import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
 
-from plots import plot_rank_abundance
-from rarefaction_extrapolation import rarefy_extrapolate_all
+from src.visualizations.plots import plot_rank_abundance
+
 
 #plt.style.use('seaborn-v0_8-white')
 #plt.style.use('seaborn-v0_8-ticks')
@@ -18,21 +16,22 @@ def profile_log(log_path, name):
     estimators = \
         {
              "1-gram": species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=1),
-                                                         quantify_all=True),
+                                                          quantify_all=True),
              "2-gram": species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=2),
-                                                         quantify_all=True),
+                                                          quantify_all=True),
              "3-gram": species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=3),
-                                                         quantify_all=True),
+                                                          quantify_all=True),
              "4-gram": species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=4),
-                                                         quantify_all=True),
+                                                          quantify_all=True),
              "5-gram": species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=5),
-                                                         quantify_all=True),
+                                                          quantify_all=True),
              "trace_variants": species_estimator.SpeciesEstimator(species_retrieval.retrieve_species_trace_variant,
-                                                            quantify_all=True),
-            "est_act_1" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity,interval_size=1), quantify_all=True),
-            "est_act_5" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity,interval_size=5),quantify_all=True),
-            "est_act_30" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity,interval_size=30), quantify_all=True),
-            "est_act_exp" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity_exponential), quantify_all=True)
+                                                                  quantify_all=True),
+            "est_act_1" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity, interval_size=1), quantify_all=True),
+            "est_act_5" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity, interval_size=5), quantify_all=True),
+            "est_act_30" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity, interval_size=30), quantify_all=True),
+            "est_act_exp" : species_estimator.SpeciesEstimator(partial(
+                species_retrieval.retrieve_timed_activity_exponential), quantify_all=True)
         }
 
     metrics_stats = {}
@@ -94,12 +93,12 @@ def profile_log(log_path, name):
     #save all metrics to csv
 
 
-profile_log("./logs/BPI_Challenge_2012.xes", "real_eval_BPI 2012")
+profile_log("../../logs/BPI_Challenge_2012.xes", "real_eval_BPI 2012")
 
-profile_log("./logs/Road_Traffic_Fines_Management_Process.xes","real_eval_Road Traffic Fines")
+profile_log("../../logs/Road_Traffic_Fines_Management_Process.xes", "real_eval_Road Traffic Fines")
 
-profile_log("./logs/Sepsis_Cases_-_Event_Log.xes","real_eval_Sepsis Cases")
+profile_log("../../logs/Sepsis_Cases_-_Event_Log.xes", "real_eval_Sepsis Cases")
 
-profile_log("./logs/BPI_Challenge_2018.xes","real_eval_BPI 2018")
+profile_log("../../logs/BPI_Challenge_2018.xes", "real_eval_BPI 2018")
 
-profile_log("./logs/BPI_Challenge_2019.xes","real_eval_BPI 2019")
+profile_log("../../logs/BPI_Challenge_2019.xes", "real_eval_BPI 2019")
