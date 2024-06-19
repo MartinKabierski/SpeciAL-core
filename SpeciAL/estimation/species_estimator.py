@@ -3,7 +3,7 @@ import pm4py
 from pandas import DataFrame
 from pm4py.objects.log.obj import EventLog, Trace
 
-from src.estimation.metrics import get_singletons, get_doubletons, completeness, coverage, \
+from process_completeness_estimation.estimation.metrics import get_singletons, get_doubletons, completeness, coverage, \
     sampling_effort_abundance, sampling_effort_incidence, hill_number_asymptotic, entropy_exp, simpson_diversity
 
 
