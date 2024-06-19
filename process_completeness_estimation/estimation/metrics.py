@@ -297,6 +297,8 @@ def coverage(obs_species_counts: dict, sample_size: int) -> float:
     f_2 = get_doubletons(obs_species_counts)
     Y = get_total_species_count(obs_species_counts)
 
+    if sample_size == 0:
+        return 0
     if f_2 == 0 and sample_size == 1:
         return 0
     if f_1 == 0 and f_2 == 0:
