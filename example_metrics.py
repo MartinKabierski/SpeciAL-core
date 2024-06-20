@@ -1,4 +1,4 @@
-from src.estimation.metrics import estimate_species_richness_chao, estimate_simpson_diversity_incidence, \
+from SpeciAL.estimation.metrics import estimate_species_richness_chao, estimate_simpson_diversity_incidence, \
     completeness, coverage, sampling_effort_incidence, estimate_exp_shannon_entropy_incidence
 
 '''

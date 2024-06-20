@@ -2,8 +2,8 @@ from functools import partial
 
 import pm4py
 
-from src.estimation import species_estimator, species_retrieval
-from src.simulation.simulation import simulate_model
+from SpeciAL.estimation import species_estimator, species_retrieval
+from SpeciAL.simulation.simulation import simulate_model
 
 
 def profile_log(log, name):
@@ -51,7 +51,7 @@ def profile_log(log, name):
 
 
 #Estimating species richness of an event log
-PATH_TO_XES = "logs/BPI_Challenge_2012.xes"
+PATH_TO_XES = "/Users/christianimenkamp/Documents/Data-Repository/Community/sepsis/Sepsis Cases - Event Log.xes"
 log = pm4py.read_xes(PATH_TO_XES)  #, return_legacy_log_object=True)
 
 profile_log(log, "example_log")
@@ -59,7 +59,7 @@ profile_log(log, "example_log")
 #Estimating species richness of a process model by simulating 1 log of size 500
 NO_LOGS = 1
 LOG_SIZE = 5000
-PATH_TO_XES = "logs/BPI_Challenge_2012.xes"
+PATH_TO_XES = "/Users/christianimenkamp/Documents/Data-Repository/Community/sepsis/Sepsis Cases - Event Log.xes"
 log = pm4py.read_xes(PATH_TO_XES)
 mod, i, f = pm4py.discover_petri_net_inductive(log, noise_threshold=0.2)
 log_ind = simulate_model(mod, i, f, NO_LOGS, LOG_SIZE)

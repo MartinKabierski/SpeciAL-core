@@ -1,0 +1,5 @@
+pm4py~=2.7.11.10
+pandas~=2.2.2
+tqdm~=4.66.4
+numpy==2.0.0rc2
+matplotlib~=3.9.0
