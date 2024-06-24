@@ -42,7 +42,7 @@ def profile_log(log, name):
 
     #profile log using each of the retrieval functions
     for est_id, est in estimators.items():
-        est.profile_log(log)
+        est.apply(log)
 
         #print obtained metrics
         print("###### " + name, est_id + " ######")

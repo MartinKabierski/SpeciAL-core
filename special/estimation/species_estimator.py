@@ -3,7 +3,7 @@ import pm4py
 from pandas import DataFrame
 from pm4py.objects.log.obj import EventLog, Trace
 
-from process_completeness_estimation.estimation.metrics import get_singletons, get_doubletons, completeness, coverage, \
+from special.estimation.metrics import get_singletons, get_doubletons, completeness, coverage, \
     sampling_effort_abundance, sampling_effort_incidence, hill_number_asymptotic, entropy_exp, simpson_diversity
 
 
@@ -86,29 +86,26 @@ class SpeciesEstimator:
             self.metrics["abundance_l_" + str(l)] = []
             self.metrics["incidence_l_" + str(l)] = []
 
-    def profile_log(self, log: EventLog|pd.DataFrame) -> None:
+    def apply(self, data: pd.DataFrame | EventLog | Trace) -> None:
         """
         add all observations of an event log and update diversity and completeness profiles once afterward.
         If parameter step_size is set to an int, profiles are additionally updated along the way according to
         the step size
-        :param log: the event log containing the trace observations
+        :param data: the event log containing the trace observations
         """
-        #if dataframe format is used convert to event log first
-        if isinstance(log, pd.DataFrame):
-            print("Provided log is in Data Frame Format. Converting to EventLog Type")
-            log = pm4py.convert_to_event_log(log)
-        for tr in log:
-            self.add_observation(tr)
+        if isinstance(data, pd.DataFrame):
+            return self.apply(pm4py.convert_to_event_log(data))
+        if isinstance(data, EventLog):
+            for tr in data:
+                return self.apply(tr)
+        if isinstance(data, Trace):
+            self.add_observation(data)
             # if step size is set, update metrics after <step_size> many traces
             if self.step_size is None:
-                continue
+                return
             elif self.incidence_sample_size % self.step_size == 0:
                 self.update_metrics()
-        self.update_metrics()
 
-    #        if self.bs:
-    #            print("Calculating Bootstrap Standard Errors")
-    #            self.update_stderrors()
 
     def add_observation(self, observation: Trace) -> None:
         """

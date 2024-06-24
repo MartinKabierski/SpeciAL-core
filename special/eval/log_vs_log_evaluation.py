@@ -35,7 +35,7 @@ def profile_log(log, name):
     print("Profiling log " + name)
     for est_id, est in estimators.items():
         print(est_id)
-        est.profile_log(log)
+        est.apply(log)
         metrics_stats[est_id] = {}
 
     print("Saving metrics in csv file")

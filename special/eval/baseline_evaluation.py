@@ -59,7 +59,7 @@ def profile_log(log):
 
     # iterate over traces in log
     for est in estimators:
-        est.profile_log(log)
+        est.apply(log)
     return estimators
 
 
