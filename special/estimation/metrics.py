@@ -1,5 +1,12 @@
 import math
 
+import mpmath
+from numpy import euler_gamma
+from scipy.special import digamma
+
+from cachetools import cached
+
+
 #TODO unify incidence and abundance-based methods in one function
 def get_incidence_count(obs_species_counts: dict, i: int) -> int:
     """
@@ -203,12 +210,16 @@ def estimate_entropy(obs_species_counts: dict, sample_size: int) -> float:
     f_1 = get_singletons(obs_species_counts)
     f_2 = get_doubletons(obs_species_counts)
 
-    first_sum = 0
+    entropy_known_species = 0
 
     for x_i in obs_species_counts.values():
         if x_i <= sample_size - 1:
             norm_factor = x_i / sample_size
-            first_sum = first_sum + norm_factor * sum([1 / k for k in range(x_i, sample_size)])
+
+            #decompose sum(1/x_i,...,1/sample_size) to um(1/1,...,1/sample_size)-sum(1/1,...,1/x_i-1)
+            entropy_known_species = entropy_known_species + norm_factor * (harmonic(sample_size) - harmonic(x_i-1))
+            #entropy_known_species = entropy_known_species + norm_factor * (mpmath.harmonic(sample_size) - mpmath.harmonic(x_i-1))
+            #entropy_known_species = entropy_known_species + norm_factor * sum([1 / k for k in range(x_i, sample_size)])
 
     a = 0
     if f_2 > 0:
@@ -218,16 +229,28 @@ def estimate_entropy(obs_species_counts: dict, sample_size: int) -> float:
     else:
         a = 1
 
-    second_sum = 0
+    entropy_unknown_species = 0
 
     # TODO rethink if this is really necessary
     if a == 1:
-        return first_sum
+        return entropy_known_species
 
-    second_sum = (f_1 / sample_size) * ((1 - a) ** (-sample_size + 1)) * (
+    entropy_unknown_species = (f_1 / sample_size) * ((1 - a) ** (-sample_size + 1)) * (
             -math.log(a) - sum([(1 / r) * ((1 - a) ** r) for r in range(1, sample_size)]))
 
-    return first_sum + second_sum
+    return entropy_known_species + entropy_unknown_species
+
+
+def harmonic(n):
+    """Returns an (approximate) value of n-th harmonic number.
+    If n>100, use an efficient approximation using the digamma function instead
+    http://en.wikipedia.org/wiki/Harmonic_number
+    taken from: https://stackoverflow.com/questions/404346/python-program-to-calculate-harmonic-series
+     """
+    if n <= 100:
+        return sum(1/k for k in range(1,n+1))
+    else:
+        return digamma(n + 1) + euler_gamma
 
 
 def estimate_simpson_diversity_abundance(obs_species_counts: dict, sample_size: int) -> float:
@@ -325,8 +348,8 @@ def sampling_effort_abundance(n: float, obs_species_counts: dict, sample_size: i
     if f_2 == 0:
         return 0
 
-    # TODO replace with species richness estimation function
-    obs_species_count = get_number_observed_species(obs_species_counts)
+    obs_species_count = estimate_species_richness_chao(obs_species_counts)
+    #get_number_observed_species(obs_species_counts))
 
     s_P = 0
     if f_2 != 0:
@@ -354,9 +377,9 @@ def sampling_effort_incidence(n: float, obs_species_counts: dict, sample_size: i
     if f_2 == 0:
         return 0
 
-    # TODO replace with species richness estimation function
     # for small sample sizes, correction term is introduced, otherwise math error
-    obs_species_count = get_number_observed_species(obs_species_counts)
+    obs_species_count = estimate_species_richness_chao(obs_species_counts)
+    #obs_species_count = get_number_observed_species(obs_species_counts)
 
     s_P = 0
     if f_2 != 0:
