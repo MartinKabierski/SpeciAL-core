@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Callable, List, Dict, Any
 
 import pandas as pd
@@ -8,6 +9,11 @@ from tqdm import tqdm
 
 from special.estimation.metrics import get_singletons, get_doubletons, completeness, coverage, \
     sampling_effort_abundance, sampling_effort_incidence, hill_number_asymptotic, entropy_exp, simpson_diversity
+
+class metric_names(Enum):
+    NO_OBSERVATIONS_ABUNDANCE = "abundance_no_observations"
+    NO_OBSERVATIONS_INCIDENCE = "incidence_no_observations"
+    # TODO finalize
 
 
 class MetricManager(dict):
