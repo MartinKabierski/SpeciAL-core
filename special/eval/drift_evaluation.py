@@ -29,7 +29,7 @@ def profile_log(log, name, tick_locations=[20,40,60,80,100], tick_names=[200,400
 
     for key, est in estimators.items():
         print("Profiling Log "+str(name)+" "+str(key))
-        est.profile_log(log)
+        est.apply(log)
         df_stats[key]={}
 
     for est_id, est in estimators.items():

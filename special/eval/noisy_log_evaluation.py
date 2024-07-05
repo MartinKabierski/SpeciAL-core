@@ -36,7 +36,7 @@ def profile_logs(log_dict):
 
         for key, est in estimators.items():
             print("Profiling log "+log_id+" "+key)
-            est.profile_log(log)
+            est.apply(log)
             estimations[key].append(est)
 
     for est_id, estimation in estimations.items():
