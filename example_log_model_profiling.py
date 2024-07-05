@@ -1,11 +1,13 @@
 from functools import partial
 
 import pm4py
+import special
 from matplotlib import pyplot as plt
 
-from special.estimation import species_estimator, species_retrieval
+from special.estimation import species_retrieval
+from special.estimation.species_estimator import SpeciesEstimator
 from special.simulation.simulation import simulate_model
-from special.visualization.visualization import plot_rank_abundance, plot_diversity_series, plot_diversity_series_all, \
+from special.visualization import plot_rank_abundance, plot_diversity_series, plot_diversity_series_all, \
     plot_diversity_sample_vs_estimate, plot_diversity_profile, plot_completeness_profile, plot_expected_sampling_effort
 
 
@@ -14,7 +16,7 @@ def profile_log(log, name):
     log, printing obtained metrics over all observations in the log each 100 traces"""
     print("Profiling log " + name)
 
-    estimator = species_estimator.SpeciesEstimator(d0=True, d1=True, d2=True, c0=True, c1=True, step_size=1000)
+    estimator = SpeciesEstimator(d0=True, d1=True, d2=True, c0=True, c1=True, l_n=[.9, .99], step_size=1000)
     estimator.register("1-gram", partial(species_retrieval.retrieve_species_n_gram, n=1))
     estimator.register("2-gram", partial(species_retrieval.retrieve_species_n_gram, n=2))
     estimator.register("3-gram", partial(species_retrieval.retrieve_species_n_gram, n=3))
@@ -25,18 +27,20 @@ def profile_log(log, name):
     estimator.print_metrics()
     estimator.to_dataFrame().to_csv("test.csv", index=False)
 
-    #TODO only show these and remove file name from function, also unifiy call signatures
-    plot_rank_abundance(estimator, "2-gram", "test_abundance.pdf", abundance=True)
-    plot_rank_abundance(estimator, "2-gram", "test_incidence.pdf", abundance=False)
-    plot_diversity_sample_vs_estimate(estimator, "2-gram", ["d0","d1","d2"] , "example.pdf",False)
-    plot_diversity_series(estimator, "2-gram", "d0", "d0_example.pdf",False)
-    plot_diversity_series(estimator, "2-gram", "d1", "d1_example.pdf",False)
-    plot_diversity_series(estimator, "2-gram", "d2", "d2_example.pdf",False)
-    plot_diversity_series_all(estimator, "2-gram", ["d0","d1","d2"], "all_example.pdf",False)
-    plot_diversity_profile(estimator, "2-gram", "example.pdf",False)
-    plot_completeness_profile(estimator, "2-gram", "completeness_example.pdf",False)
-    plot_diversity_profile(estimator, "2-gram", "example.pdf",False)
-    plot_expected_sampling_effort(estimator, "2-gram", "example.pdf",False)
+    plot_rank_abundance(estimator, "2-gram", abundance=False, save_to="ranks.pdf")
+    plot_diversity_series_all(estimator, "2-gram", abundance=False, metrics=["d0","d1","d2"], save_to="diversity.pdf")
+    plot_completeness_profile(estimator, "2-gram", abundance=False, save_to="completeness.pdf")
+
+    #plot_rank_abundance(estimator, "2-gram", "test_incidence.pdf", abundance=False)
+    #plot_diversity_sample_vs_estimate(estimator, "2-gram", ["d0","d1","d2"] , "example.pdf",False)
+    #plot_diversity_series(estimator, "2-gram", "d0", "d0_example.pdf",False)
+    #plot_diversity_series(estimator, "2-gram", "d1", "d1_example.pdf",False)
+    #plot_diversity_series(estimator, "2-gram", "d2", "d2_example.pdf",False)
+    #plot_diversity_series_all(estimator, "2-gram", ["d0","d1","d2"], "all_example.pdf",False)
+    #plot_diversity_profile(estimator, "2-gram", "example.pdf",False)
+    #plot_completeness_profile(estimator, "2-gram", "completeness_example.pdf",False)
+    #plot_diversity_profile(estimator, "2-gram", "example.pdf",False)
+    #plot_expected_sampling_effort(estimator, "2-gram", "example.pdf",False)
 
 
 

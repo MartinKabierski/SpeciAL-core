@@ -10,7 +10,7 @@ class plot_params(Enum):
     WIDTH = 9
 
 
-def plot_rank_abundance(estimator: SpeciesEstimator, species_id: str, file_name: str, abundance: bool):
+def plot_rank_abundance(estimator: SpeciesEstimator, species_id: str, abundance: bool):
     #plt.style.use('seaborn-v0_8-ticks')
 
     plt.rcParams['figure.figsize'] = [9, 3.5]
@@ -33,7 +33,6 @@ def plot_rank_abundance(estimator: SpeciesEstimator, species_id: str, file_name:
                [0, max(reference_values_sorted)])
 
     plt.tight_layout()
-    plt.savefig(file_name, format="pdf")
     plt.close()
 
 
