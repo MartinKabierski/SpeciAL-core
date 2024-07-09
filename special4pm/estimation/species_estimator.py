@@ -7,7 +7,7 @@ from pandas import DataFrame
 from pm4py.objects.log.obj import EventLog, Trace
 from tqdm import tqdm
 
-from special.estimation.metrics import get_singletons, get_doubletons, completeness, coverage, \
+from special4pm.estimation.metrics import get_singletons, get_doubletons, completeness, coverage, \
     sampling_effort_abundance, sampling_effort_incidence, hill_number_asymptotic, entropy_exp, simpson_diversity
 
 class metric_names(Enum):
@@ -80,7 +80,7 @@ class SpeciesEstimator:
     A class for the estimation of diversity and completeness profiles of trace-based species definitions
     """
 
-    def __init__(self, d0: bool = True, d1: bool = False, d2: bool = False, c0: bool = True,
+    def __init__(self, d0: bool = True, d1: bool = True, d2: bool = True, c0: bool = True,
                  c1: bool = True,
                  l_n: list = [.9, .95, .99], step_size: int | None = None):
         """

@@ -151,10 +151,10 @@ def get_expected_incidence_of_k_at_m(sample_size, k, m, incidences):
         # if f_j == 0:# or f_j > sample_size - m+k+1:
         #     continue
 
-        # first = scipy.special.comb(j, k, exact=True) if k <= j / 2 else scipy.special.comb(j, j - k, exact=True)
-        # second = scipy.special.comb(sample_size - j, m - k, exact=True) if m - k <= (
-        #        sample_size - j) / 2 else scipy.special.comb(sample_size - j, sample_size - j - m - k, exact=True)
-        # third = scipy.special.comb(sample_size, m, exact=True) if m <= sample_size else scipy.special.comb(sample_size,
+        # first = scipy.special4pm.comb(j, k, exact=True) if k <= j / 2 else scipy.special4pm.comb(j, j - k, exact=True)
+        # second = scipy.special4pm.comb(sample_size - j, m - k, exact=True) if m - k <= (
+        #        sample_size - j) / 2 else scipy.special4pm.comb(sample_size - j, sample_size - j - m - k, exact=True)
+        # third = scipy.special4pm.comb(sample_size, m, exact=True) if m <= sample_size else scipy.special4pm.comb(sample_size,
         #                                                                                                   sample_size - m,
         #                                                                                                   exact=True)
         first = binom(j, k)  # if k <= j / 2 else binom(j, j - k)
@@ -168,14 +168,14 @@ def get_expected_incidence_of_k_at_m(sample_size, k, m, incidences):
 
     # first, second, third = 0, 0, 0
     # s = 0
-    # third = scipy.special.comb(sample_size, m, exact=True) if m<=sample_size else scipy.special.comb(sample_size, sample_size - m, exact=True)
+    # third = scipy.special4pm.comb(sample_size, m, exact=True) if m<=sample_size else scipy.special4pm.comb(sample_size, sample_size - m, exact=True)
     # # print()
     # for i, y_i in enumerate(reference_sample.values()):
     # #    # print(y_i)
     #     if y_i >= k:
-    #         first = scipy.special.comb(y_i,k, exact=True) if k<=y_i/2 else scipy.special.comb(y_i,y_i-k, exact=True)
+    #         first = scipy.special4pm.comb(y_i,k, exact=True) if k<=y_i/2 else scipy.special4pm.comb(y_i,y_i-k, exact=True)
     #         if sample_size - y_i >= m - k:
-    #             second = scipy.special.comb(sample_size-y_i, m-k, exact=True) if m-k<=(sample_size-y_i)/2 else scipy.special.comb(sample_size-y_i, sample_size-y_i - m-k, exact=True)
+    #             second = scipy.special4pm.comb(sample_size-y_i, m-k, exact=True) if m-k<=(sample_size-y_i)/2 else scipy.special4pm.comb(sample_size-y_i, sample_size-y_i - m-k, exact=True)
     # #            # print(first, second, first * second, third)
     # #    # print(first * second, third)
     #     s = s + (first * second) / (third)
@@ -188,7 +188,7 @@ def binom(n, k):
     # if k>n:
     #    return 0
     # return math.comb(n, k)
-    # return scipy.special.comb(n, k, exact=True)
+    # return scipy.special4pm.comb(n, k, exact=True)
     return gmpy2.comb(n, k)
     # """
     # A fast way to calculate binomial coefficients by Andrew Dalke (contrib).

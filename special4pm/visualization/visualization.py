@@ -3,14 +3,14 @@ from enum import Enum
 import matplotlib.pyplot as plt
 import numpy as np
 
-from special.estimation.species_estimator import SpeciesEstimator
+from special4pm.estimation.species_estimator import SpeciesEstimator
 
 
 class plot_params(Enum):
     WIDTH = 9
 
 
-def plot_rank_abundance(estimator: SpeciesEstimator, species_id: str, abundance: bool):
+def plot_rank_abundance(estimator: SpeciesEstimator, species_id: str, abundance: bool, save_to=None):
     #plt.style.use('seaborn-v0_8-ticks')
 
     plt.rcParams['figure.figsize'] = [9, 3.5]
@@ -33,17 +33,22 @@ def plot_rank_abundance(estimator: SpeciesEstimator, species_id: str, abundance:
                [0, max(reference_values_sorted)])
 
     plt.tight_layout()
-    plt.close()
+    if save_to is None:
+        plt.show()
+    else:
+        plt.savefig(save_to, format="pdf")
+        plt.show()
+    #plt.close()
 
 
-def plot_diversity_sample_vs_estimate(estimator: SpeciesEstimator, species_id: str, metrics: [str], file_name: str,
-                                      abundance: bool):
+def plot_diversity_sample_vs_estimate(estimator: SpeciesEstimator, species_id: str, metrics: [str],
+                                      abundance: bool, save_to=None):
     '''
     Plots the obtained time series of sample-based diversity vs asymptotic diversity
+    :param save_to:
     :param estimator:
     :param species_id:
     :param metrics:
-    :param file_name:
     :param abundance:
     :return:
     '''
@@ -77,18 +82,20 @@ def plot_diversity_sample_vs_estimate(estimator: SpeciesEstimator, species_id: s
         ax.set_ylabel("Diversity", fontsize=24)
         ax.legend(fontsize=20)
     #plt.tight_layout()
-    plt.savefig("diversity_series_" + file_name, format="pdf")
-    return f
+    if save_to is None:
+        plt.show()
+    else:
+        plt.savefig(save_to, format="pdf")
+        plt.show()
 
 
-def plot_diversity_series(estimator: SpeciesEstimator, species_id: str, metric: str, file_name: str,
-                          abundance: bool):
+def plot_diversity_series(estimator: SpeciesEstimator, species_id: str, metric: str,
+                          abundance: bool, save_to=None):
     '''
     Plots the time series of the specified sample_based diversity metric, adding the asymptotic diversity as an indicator
     :param estimator:
     :param species_id:
     :param metric:
-    :param file_name:
     :param abundance:
     :return:
     '''
@@ -123,18 +130,21 @@ def plot_diversity_series(estimator: SpeciesEstimator, species_id: str, metric: 
     plt.plot(no_data_points, series_estimate[-1], 'o', c="grey")
     #plt.annotate(metric + "=" + str(series_estimate[-1]), (no_data_points, series_estimate[-1]))
     #plt.tight_layout()
-    plt.savefig("diversity_series_" + file_name, format="pdf")
-    return f
+    if save_to is None:
+        plt.show()
+    else:
+        plt.savefig(save_to, format="pdf")
+        plt.show()
 
 
-def plot_diversity_series_all(estimator: SpeciesEstimator, species_id: str, metrics: [str], file_name: str,
-                              abundance: bool):
+def plot_diversity_series_all(estimator: SpeciesEstimator, species_id: str, metrics: [str],
+                              abundance: bool, save_to=None):
     '''
     Plots all sample-based diversity metrics with their asymptotiv diversity
+    :param save_to:
     :param estimator:
     :param species_id:
     :param metrics:
-    :param file_name:
     :param abundance:
     :return:
     '''
@@ -163,23 +173,26 @@ def plot_diversity_series_all(estimator: SpeciesEstimator, species_id: str, metr
         plt.xticks([0, no_data_points], [0, series_observations_ids[-1]])
 
         plt.plot(series_sample, label=metric)
-        plt.plot(no_data_points, series_estimate[-1], 'o', c="grey")
+        plt.plot(no_data_points-1, series_estimate[-1], 'o', c="darkgrey")
         #plt.annotate(metric + "=" + str(series_estimate[-1]), (no_data_points, series_estimate[-1]))
     plt.xlabel("Sample Size", fontsize=24)
     plt.ylabel("Diversity", fontsize=24)
 
     plt.tight_layout()
-    plt.savefig("diversity_series_" + file_name, format="pdf")
-    return f
+    if save_to is None:
+        plt.show()
+    else:
+        plt.savefig(save_to, format="pdf")
+        plt.show()
 
 
-def plot_diversity_profile(estimator: SpeciesEstimator, species_id: str, file_name: str,
-                           abundance: bool):
+def plot_diversity_profile(estimator: SpeciesEstimator, species_id: str,
+                           abundance: bool , save_to = None):
     '''
     Plots the asymptotic diversity profile
+    :param save_to:
     :param estimator:
     :param species_id:
-    :param file_name:
     :param abundance:
     :return:
     '''
@@ -196,21 +209,24 @@ def plot_diversity_profile(estimator: SpeciesEstimator, species_id: str, file_na
 
     plt.xticks([0, 1, 2], ["q=0", "q=1", "q=2"])
     plt.plot(profile)
-    plt.xlabel("Order q", fontsize=24)
-    plt.ylabel("Diversity", fontsize=24)
+    plt.xlabel("Order q", fontsize=22)
+    plt.ylabel("Diversity", fontsize=22)
 
     plt.tight_layout()
-    plt.savefig("diversity_profile_" + file_name, format="pdf")
-    return f
+    if save_to is None:
+        plt.show()
+    else:
+        plt.savefig(save_to, format="pdf")
+        plt.show()
 
 
-def plot_completeness_profile(estimator: SpeciesEstimator, species_id: str, file_name: str,
-                              abundance: bool):
+def plot_completeness_profile(estimator: SpeciesEstimator, species_id: str,
+                              abundance: bool , save_to = None):
     '''
     Plots the time series for both completeness and coverage
+    :param save_to:
     :param estimator:
     :param species_id:
-    :param file_name:
     :param abundance:
     :return:
     '''
@@ -223,8 +239,8 @@ def plot_completeness_profile(estimator: SpeciesEstimator, species_id: str, file
     key_coverage = "abundance_c1" if abundance else "incidence_c1"
 
     series_completeness = estimator.metrics[species_id][key_completeness] if abundance else \
-    estimator.metrics[species_id][
-        key_completeness]
+        estimator.metrics[species_id][
+            key_completeness]
     series_coverage = estimator.metrics[species_id][key_coverage] if abundance else estimator.metrics[species_id][
         key_coverage]
 
@@ -241,19 +257,24 @@ def plot_completeness_profile(estimator: SpeciesEstimator, species_id: str, file
     plt.plot(series_completeness, label="Completeness")
     plt.plot(series_coverage, label="Coverage")
     plt.legend()
-    plt.title("Completeness Profile", fontsize=24)
-    plt.xlabel("Sample Size", fontsize=24)
-    plt.savefig("completeness_profile_" + file_name, format="pdf")
-    return f
+    #plt.title("Completeness Profile", fontsize=24)
+    plt.xlabel("Sample Size", fontsize=22)
+    plt.ylabel("Completeness", fontsize=22)
+
+    if save_to is None:
+        plt.show()
+    else:
+        plt.savefig(save_to, format="pdf")
+        plt.show()
 
 
-def plot_expected_sampling_effort(estimator: SpeciesEstimator, species_id: str, file_name: str,
-                                  abundance: bool):
+def plot_expected_sampling_effort(estimator: SpeciesEstimator, species_id: str,
+                                  abundance: bool, save_to = None):
     '''
     Plots the time series for expected sampling efforts
+    :param save_to:
     :param estimator:
     :param species_id:
-    :param file_name:
     :param abundance:
     :return:
     '''
@@ -281,5 +302,8 @@ def plot_expected_sampling_effort(estimator: SpeciesEstimator, species_id: str, 
     plt.legend()
     #plt.title("Completeness Profile", fontsize=24)
     plt.xlabel("Sample Size", fontsize=24)
-    plt.savefig("effort_" + file_name, format="pdf")
-    return f
+    if save_to is None:
+        plt.show()
+    else:
+        plt.savefig(save_to, format="pdf")
+        plt.show()

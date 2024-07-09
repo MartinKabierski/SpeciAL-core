@@ -1,14 +1,11 @@
 from functools import partial
 
 import pm4py
-import special
-from matplotlib import pyplot as plt
 
-from special.estimation import species_retrieval
-from special.estimation.species_estimator import SpeciesEstimator
-from special.simulation.simulation import simulate_model
-from special.visualization import plot_rank_abundance, plot_diversity_series, plot_diversity_series_all, \
-    plot_diversity_sample_vs_estimate, plot_diversity_profile, plot_completeness_profile, plot_expected_sampling_effort
+from special4pm.estimation import SpeciesEstimator
+from special4pm.species import retrieve_species_n_gram
+from special4pm.visualization import plot_rank_abundance, plot_diversity_series_all, \
+    plot_completeness_profile
 
 
 def profile_log(log, name):
@@ -16,12 +13,12 @@ def profile_log(log, name):
     log, printing obtained metrics over all observations in the log each 100 traces"""
     print("Profiling log " + name)
 
-    estimator = SpeciesEstimator(d0=True, d1=True, d2=True, c0=True, c1=True, l_n=[.9, .99], step_size=1000)
-    estimator.register("1-gram", partial(species_retrieval.retrieve_species_n_gram, n=1))
-    estimator.register("2-gram", partial(species_retrieval.retrieve_species_n_gram, n=2))
-    estimator.register("3-gram", partial(species_retrieval.retrieve_species_n_gram, n=3))
-    estimator.register("4-gram", partial(species_retrieval.retrieve_species_n_gram, n=4))
-    estimator.register("5-gram", partial(species_retrieval.retrieve_species_n_gram, n=5))
+    estimator = SpeciesEstimator(step_size=10)
+    estimator.register("1-gram", partial(retrieve_species_n_gram, n=1))
+    estimator.register("2-gram", partial(retrieve_species_n_gram, n=2))
+    estimator.register("3-gram", partial(retrieve_species_n_gram, n=3))
+    estimator.register("4-gram", partial(retrieve_species_n_gram, n=4))
+    estimator.register("5-gram", partial(retrieve_species_n_gram, n=5))
 
     estimator.apply(log)
     estimator.print_metrics()
@@ -46,7 +43,7 @@ def profile_log(log, name):
 
 
 #Estimating species richness of an event log
-PATH_TO_XES = "logs/BPI_Challenge_2019.xes"
+PATH_TO_XES = "Sepsis_Cases_-_Event_Log.xes"
 log = pm4py.read_xes(PATH_TO_XES)
 
 profile_log(log, "example_log")
