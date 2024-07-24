@@ -4,8 +4,7 @@ import pm4py
 
 from special4pm.estimation import SpeciesEstimator
 from special4pm.species import retrieve_species_n_gram
-from special4pm.visualization import plot_rank_abundance, plot_diversity_series_all, \
-    plot_completeness_profile
+from special4pm.visualization import plot_rank_abundance, plot_completeness_profile, plot_diversity_profile
 
 
 def profile_log(log, name):
@@ -25,22 +24,8 @@ def profile_log(log, name):
     estimator.to_dataFrame().to_csv("test.csv", index=False)
 
     plot_rank_abundance(estimator, "2-gram", abundance=False, save_to="ranks.pdf")
-    plot_diversity_series_all(estimator, "2-gram", abundance=False, metrics=["d0","d1","d2"], save_to="diversity.pdf")
+    plot_diversity_profile(estimator, "2-gram", abundance=False, metrics=["d0","d1","d2"], save_to="diversity.pdf")
     plot_completeness_profile(estimator, "2-gram", abundance=False, save_to="completeness.pdf")
-
-    #plot_rank_abundance(estimator, "2-gram", "test_incidence.pdf", abundance=False)
-    #plot_diversity_sample_vs_estimate(estimator, "2-gram", ["d0","d1","d2"] , "example.pdf",False)
-    #plot_diversity_series(estimator, "2-gram", "d0", "d0_example.pdf",False)
-    #plot_diversity_series(estimator, "2-gram", "d1", "d1_example.pdf",False)
-    #plot_diversity_series(estimator, "2-gram", "d2", "d2_example.pdf",False)
-    #plot_diversity_series_all(estimator, "2-gram", ["d0","d1","d2"], "all_example.pdf",False)
-    #plot_diversity_profile(estimator, "2-gram", "example.pdf",False)
-    #plot_completeness_profile(estimator, "2-gram", "completeness_example.pdf",False)
-    #plot_diversity_profile(estimator, "2-gram", "example.pdf",False)
-    #plot_expected_sampling_effort(estimator, "2-gram", "example.pdf",False)
-
-
-
 
 #Estimating species richness of an event log
 PATH_TO_XES = "Sepsis_Cases_-_Event_Log.xes"

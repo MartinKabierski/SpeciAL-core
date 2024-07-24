@@ -1,1 +1,7 @@
 logs/
+build/
+.idea/
+__pycache__
+*.pdf
+*.xes
+*.pnml	

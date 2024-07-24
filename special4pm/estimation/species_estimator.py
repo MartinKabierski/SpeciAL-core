@@ -1,5 +1,4 @@
-from enum import Enum
-from typing import Callable, List, Dict, Any
+from typing import Callable
 
 import pandas as pd
 import pm4py
@@ -10,10 +9,7 @@ from tqdm import tqdm
 from special4pm.estimation.metrics import get_singletons, get_doubletons, completeness, coverage, \
     sampling_effort_abundance, sampling_effort_incidence, hill_number_asymptotic, entropy_exp, simpson_diversity
 
-class metric_names(Enum):
-    NO_OBSERVATIONS_ABUNDANCE = "abundance_no_observations"
-    NO_OBSERVATIONS_INCIDENCE = "incidence_no_observations"
-    # TODO finalize
+# TODO enum for proper key access
 
 
 class MetricManager(dict):
@@ -84,7 +80,6 @@ class SpeciesEstimator:
                  c1: bool = True,
                  l_n: list = [.9, .95, .99], step_size: int | None = None):
         """
-        :param species_retrieval_function: a function mapping a trace to a list of corresponding species
         :param d0: flag indicating if D0(=species richness) should be included
         :param d1: flag indicating if D1(=exponential Shannon entropy) should be included
         :param d2: flag indicating if D2(=Simpson diversity index) should be included
@@ -125,7 +120,9 @@ class SpeciesEstimator:
         """
         if isinstance(data, pd.DataFrame):
             return self.apply(pm4py.convert_to_event_log(data))
-        if isinstance(data, EventLog):
+
+        #todo find out why this is notably faster than self.apply(tr) for tr in Log
+        elif isinstance(data, EventLog):
             for species_id in self.species_retrieval.keys():
                 for tr in tqdm(data, "Profiling Log for " + species_id):
                     self.add_observation(tr, species_id)
@@ -136,23 +133,24 @@ class SpeciesEstimator:
                         self.update_metrics(species_id)
                 self.update_metrics(species_id)
 
-                #self.apply(tr)
-            return
-        if isinstance(data, Trace):
-            pass
-        #    #for species_id in self.species_retrieval.keys():
-        #    self.add_observation(data, species_id)
-        #    # if step size is set, update metrics after <step_size> many traces
-        #    if self.step_size is None:
-        #        return
-        #    elif self.metrics[species_id].incidence_sample_size % self.step_size == 0:
-        #        self.update_metrics(species_id)
+        elif isinstance(data, Trace):
+            for species_id in self.species_retrieval.keys():
+                self.add_observation(data, species_id)
+                # if step size is set, update metrics after <step_size> many traces
+                if self.step_size is None:
+                    continue
+                elif self.metrics[species_id].incidence_sample_size % self.step_size == 0:
+                    self.update_metrics(species_id)
+
         else:
             raise RuntimeError('Cannot apply data of type ' + str(type(data)))
+
+
 
     def add_observation(self, observation: Trace, species_id: str) -> None:
         """
         adds a single observation
+        :param species_id: the species definition for which observation shall be added
         :param observation: the trace observation
         """
         # retrieve species from current observation

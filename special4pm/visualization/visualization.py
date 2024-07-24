@@ -41,6 +41,7 @@ def plot_rank_abundance(estimator: SpeciesEstimator, species_id: str, abundance:
     #plt.close()
 
 
+#TODO properly unify function calls - the following three diversity functions can be unified into one function
 def plot_diversity_sample_vs_estimate(estimator: SpeciesEstimator, species_id: str, metrics: [str],
                                       abundance: bool, save_to=None):
     '''
@@ -89,7 +90,7 @@ def plot_diversity_sample_vs_estimate(estimator: SpeciesEstimator, species_id: s
         plt.show()
 
 
-def plot_diversity_series(estimator: SpeciesEstimator, species_id: str, metric: str,
+def plot_diversity_curve(estimator: SpeciesEstimator, species_id: str, metric: str,
                           abundance: bool, save_to=None):
     '''
     Plots the time series of the specified sample_based diversity metric, adding the asymptotic diversity as an indicator
@@ -137,7 +138,7 @@ def plot_diversity_series(estimator: SpeciesEstimator, species_id: str, metric: 
         plt.show()
 
 
-def plot_diversity_series_all(estimator: SpeciesEstimator, species_id: str, metrics: [str],
+def plot_diversity_profile(estimator: SpeciesEstimator, species_id: str, metrics: [str],
                               abundance: bool, save_to=None):
     '''
     Plots all sample-based diversity metrics with their asymptotiv diversity
@@ -186,7 +187,7 @@ def plot_diversity_series_all(estimator: SpeciesEstimator, species_id: str, metr
         plt.show()
 
 
-def plot_diversity_profile(estimator: SpeciesEstimator, species_id: str,
+def plot_diversity_profile_estimates(estimator: SpeciesEstimator, species_id: str,
                            abundance: bool , save_to = None):
     '''
     Plots the asymptotic diversity profile
