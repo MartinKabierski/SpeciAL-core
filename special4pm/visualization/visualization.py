@@ -10,7 +10,7 @@ class plot_params(Enum):
     WIDTH = 9
 
 
-def plot_rank_abundance(estimator: SpeciesEstimator, species_id: str, abundance: bool, save_to=None):
+def plot_rank_abundance(estimator: SpeciesEstimator, species_id: str, abundance: bool = False, save_to=None):
     #plt.style.use('seaborn-v0_8-ticks')
 
     plt.rcParams['figure.figsize'] = [9, 3.5]
@@ -43,7 +43,7 @@ def plot_rank_abundance(estimator: SpeciesEstimator, species_id: str, abundance:
 
 #TODO properly unify function calls - the following three diversity functions can be unified into one function
 def plot_diversity_sample_vs_estimate(estimator: SpeciesEstimator, species_id: str, metrics: [str],
-                                      abundance: bool, save_to=None):
+                                      abundance: bool = False, save_to=None):
     '''
     Plots the obtained time series of sample-based diversity vs asymptotic diversity
     :param save_to:
@@ -91,7 +91,7 @@ def plot_diversity_sample_vs_estimate(estimator: SpeciesEstimator, species_id: s
 
 
 def plot_diversity_curve(estimator: SpeciesEstimator, species_id: str, metric: str,
-                          abundance: bool, save_to=None):
+                          abundance: bool = False, save_to=None):
     '''
     Plots the time series of the specified sample_based diversity metric, adding the asymptotic diversity as an indicator
     :param estimator:
@@ -138,8 +138,8 @@ def plot_diversity_curve(estimator: SpeciesEstimator, species_id: str, metric: s
         plt.show()
 
 
-def plot_diversity_profile(estimator: SpeciesEstimator, species_id: str, metrics: [str],
-                              abundance: bool, save_to=None):
+def plot_diversity_profile(estimator: SpeciesEstimator, species_id: str, metrics: [str] = ["d0","d1","d2"],
+                              abundance: bool = False, save_to=None):
     '''
     Plots all sample-based diversity metrics with their asymptotiv diversity
     :param save_to:
@@ -188,7 +188,7 @@ def plot_diversity_profile(estimator: SpeciesEstimator, species_id: str, metrics
 
 
 def plot_diversity_profile_estimates(estimator: SpeciesEstimator, species_id: str,
-                           abundance: bool , save_to = None):
+                           abundance: bool = False, save_to = None):
     '''
     Plots the asymptotic diversity profile
     :param save_to:
@@ -222,7 +222,7 @@ def plot_diversity_profile_estimates(estimator: SpeciesEstimator, species_id: st
 
 
 def plot_completeness_profile(estimator: SpeciesEstimator, species_id: str,
-                              abundance: bool , save_to = None):
+                              abundance: bool  = False, save_to = None):
     '''
     Plots the time series for both completeness and coverage
     :param save_to:
@@ -270,7 +270,7 @@ def plot_completeness_profile(estimator: SpeciesEstimator, species_id: str,
 
 
 def plot_expected_sampling_effort(estimator: SpeciesEstimator, species_id: str,
-                                  abundance: bool, save_to = None):
+                                  abundance: bool = False, save_to = None):
     '''
     Plots the time series for expected sampling efforts
     :param save_to:
