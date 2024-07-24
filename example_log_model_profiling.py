@@ -23,9 +23,9 @@ def profile_log(log, name):
     estimator.print_metrics()
     estimator.to_dataFrame().to_csv("test.csv", index=False)
 
-    plot_rank_abundance(estimator, "2-gram", abundance=False, save_to="ranks.pdf")
-    plot_diversity_profile(estimator, "2-gram", abundance=False, metrics=["d0","d1","d2"], save_to="diversity.pdf")
-    plot_completeness_profile(estimator, "2-gram", abundance=False, save_to="completeness.pdf")
+    plot_rank_abundance(estimator, "2-gram", save_to="ranks.pdf")
+    plot_diversity_profile(estimator, "2-gram", save_to="diversity.pdf")
+    plot_completeness_profile(estimator, "2-gram", save_to="completeness.pdf")
 
 #Estimating species richness of an event log
 PATH_TO_XES = "Sepsis_Cases_-_Event_Log.xes"
