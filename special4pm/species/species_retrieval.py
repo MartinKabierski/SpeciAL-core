@@ -4,13 +4,20 @@ from datetime import datetime, timedelta
 import pm4py
 
 def retrieve_species_n_gram(trace, n):
-    if len(trace) < n:
-        return ["NULL"]
+    """
+    TODO: this return a list of exactly n-grams, i.e. if a sequence is less than n-grams, an empty list is returned
+    :param trace:
+    :param n:
+    :return:
+    """
+    #if len(trace) < n:
+    #    return ["NULL"]
     events = [x['concept:name'] for x in trace]
-
-    if n >= 2:
-        events.insert(0, "START")
-        events.append("END")
+    #if len(events) <n:
+    #    [events.append("NULL") for _ in range(n-len(events))]
+    #if n >= 2:
+    #    events.insert(0, "START")
+    #    events.append("END")
     return [",".join(events[x:x + n]) for x in range(0, len(events) - n+1)]
 
 

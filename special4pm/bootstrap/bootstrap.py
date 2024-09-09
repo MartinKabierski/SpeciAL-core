@@ -1,107 +1,17 @@
-import copy
 import math
-import random
 import statistics
 
-from numpy.random import choice
+import numpy as np
 
-from src.estimation.metrics import estimate_species_richness_chao, get_singletons, get_doubletons, estimate_species_richness_chao_corrected, get_number_observed_species, entropy_exp, \
-    simpson_diversity, estimate_shannon_entropy_abundance, estimate_simpson_diversity_abundance, \
-    estimate_shannon_entropy_incidence, estimate_simpson_diversity_incidence
+from special4pm.estimation.metrics import get_singletons, get_doubletons, get_total_species_count, \
+    hill_number_asymptotic, completeness, \
+    coverage
 
 
-def get_bootstrap_probabilities_abundance(reference_sample, sample_size):
+def generate_bootstrap_samples_abundance(reference_sample, n):
     s_obs = len(reference_sample)
-
-    f_1 = get_singletons(reference_sample)
-    f_2 = get_doubletons(reference_sample)
-    f_0 = 0
-    if f_2 > 0:
-        f_0 = ((sample_size - 1) / sample_size) * f_1 ** 2 / (2 * f_2)
-    else:
-        f_0 = ((sample_size - 1) / sample_size) * f_1 * (f_1 - 1) / 2
-    f_0 = math.ceil(f_0)
-    # print(s_obs,f_0)
-    probabilities = []
-    c = get_c_n_abundance(reference_sample, sample_size)
-    factor = factor_abundance(reference_sample, sample_size, c)
-
-    for x_i in reference_sample.values():
-        adapted_p = (x_i / sample_size) * (1 - factor * ((1 - (x_i / sample_size)) ** sample_size))
-        probabilities.append(adapted_p)
-    [probabilities.append((1 - c) / f_0) for i in range(0, f_0)]
-    return probabilities
-
-def get_bootstrap_probabilities_incidence(reference_sample, sample_size):
-    s_obs = len(reference_sample)
-    f_0 = 0
-
-    f_1 = get_singletons(reference_sample)
-    f_2 = get_doubletons(reference_sample)
-
-    if f_2 > 0:
-        f_0 = ((sample_size - 1) / sample_size) * f_1 ** 2 / (2 * f_2)
-    else:
-        f_0 = ((sample_size - 1) / sample_size) * f_1 * (f_1 - 1) / 2
-    f_0 = math.ceil(f_0)
-    #print(f_0, s_obs)
-    # print(s_obs,f_0)
-
-    probabilities = []
-    c = get_c_n_incidence(reference_sample, sample_size)
-    u = sum(reference_sample.values())
-
-    factor = factor_incidence(reference_sample, sample_size, u, c)
-
-    for y_i in reference_sample.values():
-        adapted_p = (y_i / sample_size) * (1 - factor * ((1 - (y_i / sample_size)) ** sample_size))
-        probabilities.append(adapted_p)
-    [probabilities.append((u / sample_size) * (1 - c) / f_0) for i in range(0, f_0)]
-    return probabilities
-
-def generate_sample_abundance(reference_sample, sample_size, probabilities):
-    s_obs = len(reference_sample)
-    f_1 = get_singletons(reference_sample)
-    f_2 = get_doubletons(reference_sample)
-    f_0 = 0
-    if f_2>0:
-        f_0 = ((sample_size-1)/sample_size) * f_1**2 / (2*f_2)
-    else:
-        f_0 = ((sample_size-1)/sample_size) * f_1 * (f_1-1) / 2
-    f_0 = math.ceil(f_0)
-    selected_species = choice([x for x in range(0, s_obs + f_0)], sample_size, p=probabilities)
-    bootstrap_sample = {}
-    for s in selected_species:
-        bootstrap_sample[s] = bootstrap_sample.get(s, 0) + 1
-
-    return bootstrap_sample
-
-def generate_sample_incidence(reference_sample, sample_size, probabilities):
-    s_obs = len(reference_sample)
-    f_0 = 0
-
-    f_1 = get_singletons(reference_sample)
-    f_2 = get_doubletons(reference_sample)
-
-    if f_2 > 0:
-        f_0 = ((sample_size - 1) / sample_size) * f_1 ** 2 / (2 * f_2)
-    else:
-        f_0 = ((sample_size - 1) / sample_size) * f_1 * (f_1 - 1) / 2
-    f_0 = math.ceil(f_0)
-
-    bootstrap_sample = {}
-    for n in range(0,sample_size):
-        for s,p in enumerate(probabilities):
-            if random.random() <= p:
-                bootstrap_sample[s]=bootstrap_sample.get(s,0) +1
-
-    #print(bootstrap_sample)
-    #print(len(bootstrap_sample), sum(bootstrap_sample.values()))
-    return bootstrap_sample
-
-#generate multiple bootstrap sample for a set of sample sizes up to the given sample size:
-def generate_bootstrap_sequence_abundance(reference_sample, sample_size, step_size=10):
-    s_obs = len(reference_sample)
+    #print(reference_sample.values)
+    sample_size = get_total_species_count(reference_sample)
 
     f_1 = get_singletons(reference_sample)
     f_2 = get_doubletons(reference_sample)
@@ -111,87 +21,41 @@ def generate_bootstrap_sequence_abundance(reference_sample, sample_size, step_si
     else:
         f_0 = ((sample_size-1)/sample_size) * f_1 * (f_1-1) / 2
     f_0 = math.ceil(f_0)
-    #print(s_obs,f_0)
     probabilities = []
     c = get_c_n_abundance(reference_sample, sample_size)
     factor = factor_abundance(reference_sample, sample_size, c)
-   # print(c,factor)
 
-    for x_i in reference_sample.values():
-        #print(x_i, sample_size)
-    #    print((x_i / sample_size), (1 - factor * (1 - (x_i / sample_size) ** sample_size)))
-        adapted_p = (x_i / sample_size) * (1 - factor * ((1 - (x_i / sample_size)) ** sample_size))
-        probabilities.append(adapted_p)
-    [probabilities.append((1 - c) / f_0) for i in range(0, f_0)]
-
-    #print(probabilities)
-    #print(sum(probabilities))
-
-    sample_sequence = []
-    sample_steps = []
-    bootstrap_sample = {}
-    steps = 0
-    while steps + step_size < sample_size:
-        selected_species = choice([x for x in range(0, s_obs + f_0)], step_size, p=probabilities)
-        for s in selected_species:
-            bootstrap_sample[s] = bootstrap_sample.get(s, 0) + 1
-        steps = steps + step_size
-        sample_steps.append(steps)
-        sample_sequence.append(copy.deepcopy(bootstrap_sample))
-        #print(bootstrap_sample)
-        #print(steps,len(bootstrap_sample), sum(bootstrap_sample.values()))
-
-    if sample_size - steps >0:
-        selected_species = choice([x for x in range(0, s_obs + f_0)], sample_size-steps, p=probabilities)
-        for s in selected_species:
-            bootstrap_sample[s] = bootstrap_sample.get(s, 0) + 1
-        steps = steps+ (sample_size-steps)
-        sample_steps.append(steps)
-        sample_sequence.append(copy.deepcopy(bootstrap_sample))
-        #print(bootstrap_sample)
-        #print(steps, len(bootstrap_sample), sum(bootstrap_sample.values()))
-
-    return sample_sequence, sample_steps
-
-
-#generate a single bootstrap sample for the given sample size
-def generate_bootstrap_sample_abundance(reference_sample, sample_size):
-    s_obs = len(reference_sample)
-
-    f_1 = get_singletons(reference_sample)
-    f_2 = get_doubletons(reference_sample)
-    f_0 = 0
-    if f_2>0:
-        f_0 = ((sample_size-1)/sample_size) * f_1**2 / (2*f_2)
-    else:
-        f_0 = ((sample_size-1)/sample_size) * f_1 * (f_1-1) / 2
-    f_0 = math.ceil(f_0)
-    #print(s_obs,f_0)
-    probabilities = []
-    c = get_c_n_abundance(reference_sample, sample_size)
-    factor = factor_abundance(reference_sample, sample_size, c)
 
     for x_i in reference_sample.values():
         adapted_p = (x_i / sample_size) * (1 - factor * ((1 - (x_i / sample_size)) ** sample_size))
         probabilities.append(adapted_p)
     [probabilities.append((1 - c) / f_0) for i in range(0, f_0)]
 
-    #print(probabilities)
-    #print(sum(probabilities))
+    rng = np.random.default_rng()
+    bs_samples = []
+    #for i in range(n):
+    #    selected_species = choice([x for x in range(0, s_obs + f_0)], sample_size, p=probabilities)
 
-    selected_species = choice([x for x in range(0, s_obs + f_0)], sample_size, p=probabilities)
-    bootstrap_sample = {}
-    for s in selected_species:
-        bootstrap_sample[s] = bootstrap_sample.get(s, 0) + 1
+    #    unique, counts = np.unique(selected_species, return_counts=True)
+    for x in rng.multinomial(sample_size, probabilities, size=n):
+        bs_samples.append( dict(zip(range(len(x)), x)))
 
-    #print(bootstrap_sample)
-    #print(len(bootstrap_sample), sum(bootstrap_sample.values()))
-    return bootstrap_sample
-
+    return bs_samples
 
 
-def generate_bootstrap_sequence_incidence(reference_sample, sample_size, step_size=10):
-    s_obs = len(reference_sample)
+def get_bootstrap_ci_incidence(reference_sample, sample_size, no_samples):
+    samples = generate_bootstrap_samples_incidence(reference_sample, sample_size, no_samples)
+    d0 = [hill_number_asymptotic(0, sample, sample_size, abundance=False) for sample in samples]
+    d1 = [hill_number_asymptotic(1, sample, sample_size, abundance=False) for sample in samples]
+    d2 = [hill_number_asymptotic(2, sample, sample_size, abundance=False) for sample in samples]
+    c0 = [completeness(sample) for sample in samples]
+    c1 = [coverage(sample, sample_size) for sample in samples]
+
+    return [statistics.stdev(x)*1.96 for x in (d0,d1,d2,c0,c1)]
+
+
+def generate_bootstrap_samples_incidence(reference_sample, sample_size, no_bs_samples):
+    #get bootstrap distribution of species
     f_0 = 0
 
     f_1 = get_singletons(reference_sample)
@@ -202,61 +66,6 @@ def generate_bootstrap_sequence_incidence(reference_sample, sample_size, step_si
     else:
         f_0 = ((sample_size-1)/sample_size) * f_1 * (f_1-1) / 2
     f_0=math.ceil(f_0)
-    #print(s_obs,f_0)
-
-    probabilities = []
-    c = get_c_n_incidence(reference_sample, sample_size)
-    u = sum(reference_sample.values())
-
-    factor = factor_incidence(reference_sample, sample_size, u, c)
-
-    for y_i in reference_sample.values():
-        adapted_p = (y_i / sample_size) * (1 - factor * ((1 - (y_i / sample_size)) ** sample_size))
-        probabilities.append(adapted_p)
-    [probabilities.append((u/sample_size) * (1 - c) / f_0) for i in range(0, f_0)]
-    print("PROBABILITIES")
-    print(probabilities)
-    print(len(probabilities))
-    #print(sum(probabilities))
-
-    sample_sequence = []
-    sample_steps = []
-    steps = 0
-    bootstrap_sample = {}
-    for n in range(0,sample_size):
-        steps= steps + 1
-        for s,p in enumerate(probabilities):
-            if random.random() <= p:
-                bootstrap_sample[s]=bootstrap_sample.get(s,0) +1
-        if steps % step_size == 0:
-            sample_sequence.append(copy.deepcopy(bootstrap_sample))
-            sample_steps.append(steps)
-            #print(bootstrap_sample)
-    #print(len(bootstrap_sample), steps,sum(bootstrap_sample.values()),sum(reference_sample.values()))
-
-    if steps % step_size > 0:
-        sample_sequence.append(copy.deepcopy(bootstrap_sample))
-        sample_steps.append(steps)
-
-        #print(bootstrap_sample)
-        #print(len(bootstrap_sample), steps)
-    return sample_sequence, sample_steps
-
-
-
-def generate_bootstrap_sample_incidence(reference_sample, sample_size):
-    s_obs = len(reference_sample)
-    f_0 = 0
-
-    f_1 = get_singletons(reference_sample)
-    f_2 = get_doubletons(reference_sample)
-
-    if f_2>0:
-        f_0 = ((sample_size-1)/sample_size) * f_1**2 / (2*f_2)
-    else:
-        f_0 = ((sample_size-1)/sample_size) * f_1 * (f_1-1) / 2
-    f_0=math.ceil(f_0)
-    #print(s_obs,f_0)
 
     probabilities = []
     c = get_c_n_incidence(reference_sample, sample_size)
@@ -269,61 +78,56 @@ def generate_bootstrap_sample_incidence(reference_sample, sample_size):
         probabilities.append(adapted_p)
     [probabilities.append((u/sample_size) * (1 - c) / f_0) for i in range(0, f_0)]
 
-    #print(probabilities)
-    #print(sum(probabilities))
+    #generate all samples
+    bootstrap_samples = [{} for _ in range(no_bs_samples)]
+    #for n in range(0,sample_size):
+    for s,p in enumerate(probabilities):
+        species_counts = np.random.default_rng().binomial(n=sample_size, p=p, size=no_bs_samples)
+        for x in range(no_bs_samples):
+            if species_counts[x]==0:
+                continue
+            bootstrap_samples[x][s]=species_counts[x]
 
-    #selected_species = choice([x for x in range(0, s_obs + f_0)], sample_size, p=probabilities)
+    return bootstrap_samples
+
+def generate_bootstrap_estimates_incidence(reference_sample, sample_size):
+    #get bootstrap distribution of species
+    f_0 = 0
+
+    f_1 = get_singletons(reference_sample)
+    f_2 = get_doubletons(reference_sample)
+
+    if f_2>0:
+        f_0 = ((sample_size-1)/sample_size) * f_1**2 / (2*f_2)
+    else:
+        f_0 = ((sample_size-1)/sample_size) * f_1 * (f_1-1) / 2
+    f_0=math.ceil(f_0)
+
+    probabilities = []
+    c = get_c_n_incidence(reference_sample, sample_size)
+    u = sum(reference_sample.values())
+
+    factor = factor_incidence(reference_sample, sample_size, u, c)
+
+    for y_i in reference_sample.values():
+        adapted_p = (y_i / sample_size) * (1 - factor * (1 - (y_i / sample_size) ** sample_size))
+        probabilities.append(adapted_p)
+    [probabilities.append((u/sample_size) * (1 - c) / f_0) for i in range(0, f_0)]
+
+    #generate all samples
     bootstrap_sample = {}
-    for n in range(0,sample_size):
-        for s,p in enumerate(probabilities):
-            if random.random() <= p:
-                bootstrap_sample[s]=bootstrap_sample.get(s,0) +1
+    #for n in range(0,sample_size):
+    for s,p in enumerate(probabilities):
+        species_count = np.random.default_rng().binomial(n=sample_size, p=p)
+        bootstrap_sample[s]=species_count
 
-    #print(bootstrap_sample)
-    #print(len(bootstrap_sample), sum(bootstrap_sample.values()))
+    #collect estimates
+
+    #return tuple
     return bootstrap_sample
 
 
-def get_bootstrap_stderr(reference_sample, sample_size, q=0, abundance=True, bootstrap_repetitions= 200):
-    estimates_q0 = []
-    estimates_q1 = []
-    estimates_q2 = []
-
-
-    probabilities = []
-    if abundance:
-        probabilities = get_bootstrap_probabilities_abundance(reference_sample, sample_size)
-    else:
-        probabilities = get_bootstrap_probabilities_incidence(reference_sample, sample_size)
-
-    for i in range(0,bootstrap_repetitions):
-        sample = None
-        if abundance:
-            sample = generate_sample_abundance(reference_sample, sample_size, probabilities)
-        else:
-            sample = generate_sample_incidence(reference_sample, sample_size, probabilities)
-
-        sample_estimate = None
-        sample_estimate_q0 = estimate_species_richness_chao(sample, obs_species_count=sample_size)
-        sample_estimate_q1 = estimate_shannon_entropy_abundance(sample, sample_size) if abundance else estimate_shannon_entropy_incidence(sample, sample_size)
-        sample_estimate_q2 = estimate_simpson_diversity_abundance(sample, sample_size) if abundance else estimate_simpson_diversity_incidence(sample, sample_size)
-        estimates_q0.append(sample_estimate_q0)
-        estimates_q1.append(sample_estimate_q1)
-        estimates_q2.append(sample_estimate_q2)
-
-    if q==0:
-        return statistics.stdev(estimates_q0)
-    if q==1:
-        return statistics.stdev(estimates_q1)
-    if q==2:
-        return statistics.stdev(estimates_q2)
-    if q==-1:
-        return(statistics.stdev(estimates_q0),statistics.stdev(estimates_q1),statistics.stdev(estimates_q2))
-
 def factor_abundance(reference_sample, n, c):
-    #print(reference_sample, n, c)
-    #print(sum([(x_i / n) * (1 - (x_i / n))**n for x_i in reference_sample.values()]))
-    #print()
     if c == 1:
         return 0
     return (1 - c) / (sum([(x_i / n) * (1 - (x_i / n))**n for x_i in reference_sample.values()]))
@@ -332,7 +136,7 @@ def factor_abundance(reference_sample, n, c):
 def factor_incidence(reference_sample, n, u, c):
     if c == 1:
         return 0
-    return ((u / n) * (1 - c)) / (sum([(x_i / n) * (1 - (x_i / n))**n for x_i in reference_sample.values()]))
+    return ((u / n) * (1 - c)) / (sum([(x_i / n) * (1 - (x_i / n) ** n) for x_i in reference_sample.values()]))
 
 
 def get_c_n_abundance(reference_sample, n):

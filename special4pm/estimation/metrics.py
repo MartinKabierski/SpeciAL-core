@@ -1,4 +1,5 @@
 import math
+from random import sample
 
 import mpmath
 from numpy import euler_gamma
@@ -182,6 +183,8 @@ def estimate_exp_shannon_entropy_abundance(obs_species_counts: dict, sample_size
     :param sample_size: the sample size associated with the species incidence counts
     :return: the estimated exponential of Shannon entropy
     """
+    if sum(obs_species_counts.values())==0 or sample_size==0:
+        return 0.0
     return math.exp(estimate_entropy(obs_species_counts, sample_size))
 
 
@@ -195,7 +198,10 @@ def estimate_exp_shannon_entropy_incidence(obs_species_counts: dict, sample_size
     # term h_o is structurally equivalent to abundance based entropy estimation, see eq H7 in appendix H of Hill number paper
     u = sum(obs_species_counts.values())
     h_o = estimate_entropy(obs_species_counts, sample_size)
-
+    if u == 0:
+        return 0.0
+    #print(h_o, u, sample_size)
+    #print(">>>"+str(math.exp((sample_size / u) * h_o + math.log(u / sample_size))))
     return math.exp((sample_size / u) * h_o + math.log(u / sample_size))
 
 
@@ -206,7 +212,9 @@ def estimate_entropy(obs_species_counts: dict, sample_size: int) -> float:
     :param sample_size: the sample size associated with the species incidence counts
     :return: the estimated exponential of Shannon entropy
     """
-    # TODO make this understandable
+    if sample_size <= 1:
+        return 0
+
     f_1 = get_singletons(obs_species_counts)
     f_2 = get_doubletons(obs_species_counts)
 
@@ -221,24 +229,41 @@ def estimate_entropy(obs_species_counts: dict, sample_size: int) -> float:
             #entropy_known_species = entropy_known_species + norm_factor * (mpmath.harmonic(sample_size) - mpmath.harmonic(x_i-1))
             #entropy_known_species = entropy_known_species + norm_factor * sum([1 / k for k in range(x_i, sample_size)])
 
+    #print(f_2,f_1, sample_size, sum(obs_species_counts.values()))
     a = 0
     if f_2 > 0:
         a = (2 * f_2) / ((sample_size - 1) * f_1 + 2 * f_2)
-    if f_2 == 0 and f_1 > 0:
+        #a = (2 * f_2) / ( f_1 + 2 * f_2)
+    elif f_2 == 0 and f_1 > 0:
         a = 2 / ((sample_size - 1) * (f_1 - 1) + 2)
     else:
         a = 1
-
+    #print(f_1, f_2, a, sample_size)
     entropy_unknown_species = 0
-
-    # TODO rethink if this is really necessary
-    if a == 1:
+    if f_1==1 and f_2 >= 20:
         return entropy_known_species
-
-    entropy_unknown_species = (f_1 / sample_size) * ((1 - a) ** (-sample_size + 1)) * (
-            -math.log(a) - sum([(1 / r) * ((1 - a) ** r) for r in range(1, sample_size)]))
-
-    return entropy_known_species + entropy_unknown_species
+    # TODO rethink if this is really necessary
+    #if a == 1:
+    #    return entropy_known_species
+    #(((1 - a) ** (-sample_size + 1)))
+    #print(0 ** 690)
+    #print(((1 - a) ** (sample_size - 1)), sample_size, a)
+    #print(entropy_known_species, a, f_1, f_2, sample_size)
+    #print(a, f_1, f_2, sample_size)
+    if a==1:
+        return entropy_known_species
+        #entropy_unknown_species = (f_1 / sample_size) * sum([(1 / r) for r in range(1, sample_size)])
+        #return entropy_known_species + entropy_unknown_species
+    ###((1-a) ** (-sample_size+1))
+    #else:
+    else:
+        entropy_unknown_species = (f_1 / sample_size) * (1-a) ** (-sample_size+1) * (
+                -math.log(a) - sum([1/r * ((1 - a) ** r) for r in range(1, sample_size)]))
+        #print(entropy_known_species, entropy_unknown_species)
+        #print(entropy_known_species, entropy_unknown_species, (f_1 / sample_size), ((1-a) ** (-sample_size+1)), -math.log(a), sum([(1 / r) * ((1 - a) ** r) for r in range(1, sample_size)]))
+        #print("TEST "+str(entropy_known_species + entropy_unknown_species))
+        #print(-math.log(a), sum([(1 / r) * ((1 - a) ** r) for r in range(1, sample_size)]), -math.log(a) - sum([(1 / r) * ((1 - a) ** r) for r in range(1, sample_size)]))
+        return entropy_known_species + entropy_unknown_species
 
 
 def harmonic(n):
@@ -280,7 +305,8 @@ def estimate_simpson_diversity_incidence(obs_species_counts: dict, sample_size: 
     # TODO make this understandable
     u = get_total_species_count(obs_species_counts)
     s = 0
-
+    if u == 0:
+        return 0.0
     nom = ((1 - (1 / sample_size)) * u) ** 2
 
     for y_i in obs_species_counts.values():
@@ -372,14 +398,18 @@ def sampling_effort_incidence(n: float, obs_species_counts: dict, sample_size: i
     comp = completeness(obs_species_counts)
     f_1 = get_singletons(obs_species_counts)
     f_2 = get_doubletons(obs_species_counts)
-    if n <= comp or sample_size < 2:
+    if n <= comp:
         return 0
-    if f_2 == 0:
+    #if f_2 == 0:
+    #    return 0
+    if sample_size==1:
+        return 0
+    if f_1 == 0:
         return 0
 
     # for small sample sizes, correction term is introduced, otherwise math error
-    obs_species_count = estimate_species_richness_chao(obs_species_counts)
-    #obs_species_count = get_number_observed_species(obs_species_counts)
+    #obs_species_count = estimate_species_richness_chao(obs_species_counts)
+    obs_species_count = get_number_observed_species(obs_species_counts)
 
     s_P = 0
     if f_2 != 0:
@@ -387,12 +417,25 @@ def sampling_effort_incidence(n: float, obs_species_counts: dict, sample_size: i
     else:
         s_P = obs_species_count + (1 - 1 / sample_size) * f_1 * (f_1 - 1) / 2
 
+    #s_P = obs_species_count + (1 - 1 / sample_size) * f_1 ** 2 / (2 * f_2)
+
+
     #TODO double check if this is indeed correct
+    #should f_2 be 0, technically assessment is not possible, thus we treat it as if one doubletons remained.
+    # Thus results are approximative in this case
 
-    nom1 = (sample_size / (sample_size - 1))
-    nom2 = ((2 * f_2) / (f_1 ** 2))
-    nom3 = (n * s_P - obs_species_count)
-    nom = (math.log(1 - nom1 * nom2 * nom3))
-    denominator = (math.log(1 - ((2 * f_2) / ((sample_size - 1) * f_1 + 2 * f_2))))
-
-    return nom / denominator
+    if f_2!=0:
+        nom1 = (sample_size / (sample_size - 1))
+        nom2 = ((2 * f_2) / (f_1 ** 2))
+        nom3 = (n * s_P - obs_species_count)
+        nom = (math.log(1 - nom1 * nom2 * nom3))
+        denominator = (math.log(1 - ((2 * f_2) / ((sample_size - 1) * f_1 + 2 * f_2))))
+        return nom / denominator
+    else:
+        nom1 = (sample_size / (sample_size - 1))
+        nom2 = ((2 * 1) / (f_1 ** 2))
+        nom3 = (n * s_P - obs_species_count)
+        nom = (math.log(1 - nom1 * nom2 * nom3))
+        denominator = (math.log(1 - ((2 * 1) / ((sample_size - 1) * f_1 + 2 * 1))))
+        return nom / denominator
+    #return final

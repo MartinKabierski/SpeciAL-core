@@ -1,96 +1,43 @@
-import species_estimator
-import species_retrieval
 from functools import partial
 import pm4py
-import pandas as pd
+from matplotlib import pyplot as plt
 
-from src.visualizations.plots import plot_rank_abundance
+from special4pm.visualization.visualization import plot_diversity_profile, plot_completeness_profile, \
+    plot_rank_abundance, plot_expected_sampling_effort
+
+from special4pm.estimation import SpeciesEstimator
+from special4pm.species import retrieve_species_n_gram, species_retrieval
 
 
-#plt.style.use('seaborn-v0_8-white')
-#plt.style.use('seaborn-v0_8-ticks')
+def init_estimator(step_size):
+    estimator = SpeciesEstimator(step_size=step_size, l_n=[0.99,0.95,0.90,0.80])
+    estimator.register("1-gram", partial(retrieve_species_n_gram, n=1))
+    estimator.register("2-gram", partial(retrieve_species_n_gram, n=2))
+    estimator.register("tv", species_retrieval.retrieve_species_trace_variant)
+    estimator.register("t1", partial(species_retrieval.retrieve_timed_activity, interval_size=1))
+    estimator.register("t5", partial(species_retrieval.retrieve_timed_activity, interval_size=5))
+    estimator.register("t30", partial(species_retrieval.retrieve_timed_activity, interval_size=30))
+    estimator.register("t_e", species_retrieval.retrieve_timed_activity_exponential)
 
-def profile_log(log_path, name):
-    log = pm4py.read_xes(log_path, return_legacy_log_object=True)
-    print("##### "+name+" #####")
-    estimators = \
-        {
-             "1-gram": species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=1),
-                                                          quantify_all=True),
-             "2-gram": species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=2),
-                                                          quantify_all=True),
-             "3-gram": species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=3),
-                                                          quantify_all=True),
-             "4-gram": species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=4),
-                                                          quantify_all=True),
-             "5-gram": species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=5),
-                                                          quantify_all=True),
-             "trace_variants": species_estimator.SpeciesEstimator(species_retrieval.retrieve_species_trace_variant,
-                                                                  quantify_all=True),
-            "est_act_1" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity, interval_size=1), quantify_all=True),
-            "est_act_5" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity, interval_size=5), quantify_all=True),
-            "est_act_30" : species_estimator.SpeciesEstimator(partial(species_retrieval.retrieve_timed_activity, interval_size=30), quantify_all=True),
-            "est_act_exp" : species_estimator.SpeciesEstimator(partial(
-                species_retrieval.retrieve_timed_activity_exponential), quantify_all=True)
-        }
+    return estimator
 
-    metrics_stats = {}
-    print("Profiling log")
-    for est_id,est in estimators.items():
-        print(name,est_id)
-        est.apply(log)
-        metrics_stats[est_id]={}
 
-    print("Saving metrics in csv file")
+def profile_log(log, name):
+    log = pm4py.read_xes(log, return_legacy_log_object=True)
+    print(len(log))
+    step_size = int(len(log) / 200)
+    estimator = init_estimator(step_size=step_size)
+    estimator.apply(log, verbose=True)
+    estimator.add_bootstrap_ci(200)
 
-    for est_id, est in estimators.items():
-        print()
-        print(name,est_id)
-        for metric in species_estimator.METRICS:
-            metrics_stats[est_id][metric] = getattr(est, metric)[-1]
-            print(metric +": "+str(getattr(est, metric)))
+    estimator.to_dataFrame().to_csv("out/" + name + ".csv", index=False)
+    estimator.to_dataFrame(include_all=False).to_csv("out/" + name + "_final_only.csv", index=False)
 
-        plot_rank_abundance(est, str(name) + " - " + str(est_id))
-        print("Total Abundances: " + str(est.total_number_species_abundances))
-        print("Total Incidences: " + str(est.total_number_species_incidences))
-        print("Degree of Aggregation: " + str(est.degree_spatial_aggregation))
-        print("Observations Incidence: " + str(est.number_observations_incidence))
-        print("Species Counts: ")
-        [print(x, end=" ") for x in est.reference_sample_incidence.values()]
-        print()
-    df_stats = pd.DataFrame.from_dict(metrics_stats)
-    df_stats.to_csv("results/" + str(name) + "_metrics.csv")
-
-#TODO rarefaction based on bootstrapping! Becomes prohibitively slow for q>=1
-    # print("Building Rarefaction and Extrapolation Curves")
-    # for est_id, est in estimators.items():
-    #     q0, q1, q2 = rarefy_extrapolate_all(est, abundance_data=False, data_points=20)
-    #     print(q0[0])
-    #     print(q0[1])
-    #
-    #     plt.rcParams['figure.figsize'] = [6, 5]
-    #     plt.rcParams['xtick.labelsize'] = 14
-    #     plt.rcParams['ytick.labelsize'] = 14
-    #
-    #     plt.plot(q0[1][:22], q0[0][:22], label="q=0", color='#F8766D')
-    #     plt.plot(q0[1][21:], q0[0][21:], linestyle="--", color='#F8766D')
-    #
-    #     plt.plot(q1[1][:22], q1[0][:22], label="q=1", color='#00BA38')
-    #     plt.plot(q1[1][21:], q1[0][21:], linestyle="--", color='#00BA38')
-    #
-    #     plt.plot(q2[1][:22], q2[0][:22], label="q=2", color='#619CFF')
-    #     plt.plot(q2[1][21:], q2[0][21:], linestyle="--", color='#619CFF')
-    #
-    #     plt.title(name, fontsize=22)
-    #     plt.xlabel("Sample Size", fontsize=18)
-    #     plt.ylabel("Diversity", fontsize=18)
-    #     plt.xticks([0, est.number_observations_incidence, 2 * est.number_observations_incidence],[0, est.number_observations_incidence, 2 * est.number_observations_incidence])
-    #     plt.legend()
-    #     plt.tight_layout()
-    #     plt.savefig("figures/real_eval_curves_" + name + "_" + est_id +  "_.pdf", format="pdf")
-    #
-    #     plt.show()
-    #save all metrics to csv
+    for species in estimator.metrics.keys():
+        plot_rank_abundance(estimator, species, abundance=False, save_to="fig/" + name + "_" + species + "_rank_abundance.pdf")
+        plot_diversity_profile(estimator, species, abundance=False, save_to="fig/" + name + "_diversity_profile.pdf")
+        plot_completeness_profile(estimator, species, abundance=False, save_to="fig/" + name + "_completeness_profile.pdf")
+        plot_expected_sampling_effort(estimator, species, abundance=False, save_to="fig/" + name + "_effort.pdf")
 
 
 profile_log("../../logs/BPI_Challenge_2012.xes", "real_eval_BPI 2012")

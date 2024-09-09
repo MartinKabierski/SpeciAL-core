@@ -1,99 +1,365 @@
-# ---EXTENSION---#
-# TODO bootstrap rarefaction and extrapolation!
-# TODO measure generalization of discovered process models
-import statistics
-
+import math
+import math
+import numpy as np
 import pandas as pd
+import pm4py
+from matplotlib import pyplot as plt
+from special4pm.visualization import visualization
 
-import src.estimation.species_estimator
-import src.estimation.species_retrieval
-from src.estimation import species_estimator, species_retrieval
-from src.simulation.simulation import simulate_model
-from src.visualizations.plots import plot_rank_abundance, plot_all_stats
-from src.simulation import simulation
-from src.estimation.species_estimator import SpeciesEstimator
+from build.src.special4pm.species import species_retrieval
+from special4pm.estimation import SpeciesEstimator
+from special4pm.simulation.simulation import simulate_model
 from functools import partial
 from tqdm import tqdm
+from special4pm.species import retrieve_species_n_gram
 
-import pm4py
 
-ESTIMATORS = ["1-gram", "2-gram", "3-gram", "4-gram", "5-gram", "trace_variants"]
-
-def summarize_metrics_reference_samples(estimations):
-    metrics_stats = {}
-    for metric in species_estimator.METRICS:
-        metrics_reference_sample = sorted([getattr(est,metric)[-1] for est in estimations])
-        metrics_stats[metric]=[
-            min(metrics_reference_sample),
-            metrics_reference_sample[2],
-            statistics.mean(metrics_reference_sample),
-            statistics.stdev(metrics_reference_sample),
-            statistics.median(metrics_reference_sample),
-            metrics_reference_sample[-2],
-            max(metrics_reference_sample)
-        ]
-        print(metric + ": " + str(statistics.median(metrics_reference_sample)))
-    return pd.DataFrame.from_dict(metrics_stats, orient='index', columns=["min","lower_ci","mean","stddev","median","upper_ci","max"])
+def init_estimator(step_size):
+    estimator = SpeciesEstimator(step_size=step_size)
+    estimator.register("1-gram", partial(retrieve_species_n_gram, n=1))
+    estimator.register("2-gram", partial(retrieve_species_n_gram, n=2))
+    estimator.register("3-gram", partial(retrieve_species_n_gram, n=3))
+    estimator.register("4-gram", partial(retrieve_species_n_gram, n=4))
+    estimator.register("5-gram", partial(retrieve_species_n_gram, n=5))
+    estimator.register("tv", species_retrieval.retrieve_species_trace_variant)
+    return estimator
 
 
 def profile_logs(logs):
-    #TODO make this a dictionary
-    estimations_per_species = [[], [], [], [], [], []]
+    step_size = int(len(logs[0]) / 200)
+    e = []
     for log in tqdm(logs, desc='Evaluating logs'):
-        results = profile_log(log)
-        for estimator, results in zip(results, estimations_per_species):
-            results.append(estimator)
-    return estimations_per_species
+        estimator = init_estimator(step_size=step_size)
+        estimator.apply(log, verbose=False)
+        e.append(estimator)
+    return e
 
 
-def profile_log(log):
-    est_1gram = SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=1), step_size=20)
-    est_2gram = SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=2), step_size=20)
-    est_3gram = SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=3), step_size=20)
-    est_4gram = SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=4), step_size=20)
-    est_5gram = SpeciesEstimator(partial(species_retrieval.retrieve_species_n_gram, n=5), step_size=20)
-    est_tv = SpeciesEstimator(species_retrieval.retrieve_species_trace_variant, step_size=20)
-
-
-    estimators = [est_1gram, est_2gram, est_3gram, est_4gram, est_5gram, est_tv]
-
-    # iterate over traces in log
-    for est in estimators:
-        est.apply(log)
-    return estimators
-
-
-def evaluate_model(path, name, repetitions, log_size):
+def evaluate_model(path, name, repetitions, log_size, true_values):
     net, im, fm = pm4py.read_pnml(path)
-    print(name)
-    simulated_logs = simulate_model(net, im, fm, repetitions, log_size)
-    results_per_species = profile_logs(simulated_logs)
+    simulated_logs = []
+    for _ in tqdm(range(repetitions), "Simulating Model "):
+        simulated_logs.append(simulate_model(net, im, fm, log_size))
+    estimations = profile_logs(simulated_logs)
 
-    for result, estimator_name in zip(results_per_species, ESTIMATORS):
-        print(name + " - " + estimator_name)
-        #TODO summary statistics post-hoc to the csv as df.describe() and df.info()
-        summary_df = summarize_metrics_reference_samples(result)
-        summary_df.to_csv("results/baseline_eval_"+name+"_"+estimator_name+"_summary.csv")
-        plot_rank_abundance(result[0], name + "_" + estimator_name)
-        print()
-        print("Total Abundances: " + str(result[0].total_number_species_abundances))
-        print("Total Incidences: " + str(result[0].total_number_species_incidences))
-        print("Degree of Aggregation: " + str(result[0].degree_spatial_aggregation))
-        print("Observations Incidence: " + str(result[0].number_observations_incidence))
-        print("Species Counts: ")
-        [print(x, end=" ") for x in result[0].reference_sample_incidence.values()]
-        print()
+    df = pd.concat([x.to_dataFrame() for x in estimations])
+    df.to_csv("out/" + name + ".csv", index=False)
 
-        plot_all_stats(result, name + "_" + estimator_name, [0, 50, 100], [0,1000,2000])
+    df_last_values_only = pd.concat([x.to_dataFrame(include_all=False) for x in estimations])
+    df_last_values_only.to_csv("out/" + name + "_final_only.csv", index=False)
 
+    stats = df.groupby(["species", "metric", "observation"])["value"].agg(
+        ['count', 'mean', 'var', 'std', 'sem']).reset_index()
+    ci95_hi = []
+    ci95_lo = []
+    true = []
+    bias = []
+    rmse = []
 
-#evaluate_model("./models/model_1.pnml", "baseline_eval_model_1", 100, 2000)
-#evaluate_model("./models/model_2.pnml", "baseline_eval_model_2", 100, 2000)
-#evaluate_model("./models/model_4.pnml", "baseline_eval_model_4", 100, 1000)
-#evaluate_model("./models/model_5.pnml", "baseline_eval_model_5", 100, 1000)
-#evaluate_model("./models/model_6.pnml", "baseline_eval_model_6", 100, 1000)
+    for i in stats.index:
+        species, metric, _, c, m, v, s, sem = stats.loc[i]
+        ci95_hi.append(m + 1.96 * s)
+        ci95_lo.append(m - 1.96 * s)
+        if species+"_"+metric in true_values:
+            bias_row = true_values[species+"_"+metric] - m
+            bias.append(bias_row)
+            rmse.append(math.sqrt(bias_row ** 2 + v))
+            true.append(true_values[species+"_"+metric])
+        else:
+            bias.append(-1)
+            rmse.append(-1)
+            true.append(-1)
+    stats['ci95_hi'] = ci95_hi
+    stats['ci95_lo'] = ci95_lo
+    stats['bias'] = bias
+    stats['rmse'] = rmse
+    stats['true_values'] = true
+
+    stats.to_csv("out/" + name + "_stats.csv", index=False)
+
+    for species in estimations[0].metrics.keys():
+        print("Evaluating " + name + ", " + species)
+        obs_ids = df[(df["species"] == species) & (df["metric"] == "incidence_no_observations")]["value"].to_list()
+        no_obs = len(
+            stats[(stats["species"] == species) & (stats["metric"] == "incidence_no_observations")]["mean"].to_list())
+
+        ### Rank Abundance Curves
+        visualization.plot_rank_abundance(estimations[0],species, False, "fig/"+name + "_" + species + "_rank_abundance.pdf")
+
+        plt.rcParams['figure.figsize'] = [3 * 9, 5]
+        plt.rcParams['xtick.labelsize'] = 20
+        plt.rcParams['ytick.labelsize'] = 20
+
+        ### Diversity Profiles
+        f, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, sharey='all')
+        #print(stats[(stats["species"] == species) & (stats["metric"] == "incidence_estimate_d0")])
+        ax1.fill_between(np.linspace(0, no_obs, no_obs),
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_estimate_d0")]["ci95_lo"],
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_estimate_d0")]["ci95_hi"],
+                         alpha=0.5)
+        ax1.plot(np.linspace(0, no_obs, no_obs),
+                 stats[(stats["species"] == species) & (stats["metric"] == "incidence_estimate_d0")]["mean"],
+                 label="Estimated")
+
+        ax1.fill_between(np.linspace(0, no_obs, no_obs),
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_sample_d0")]["ci95_lo"],
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_sample_d0")]["ci95_hi"],
+                         alpha=0.5)
+        ax1.plot(np.linspace(0, no_obs, no_obs),
+                 stats[(stats["species"] == species) & (stats["metric"] == "incidence_sample_d0")]["mean"],
+                 label="Observed")
+
+        ax1.axhline(true_values[species+"_incidence_estimate_d0"], color = "grey", ls="--")
+
+        ax1.set_xticks([0, no_obs], [0, int(obs_ids[-1])])
+        ax1.legend(fontsize=20)
+        ax1.set_title("q=0", fontsize=28)
+        ax1.set_xlabel("Sample Size", fontsize=24)
+        ax1.set_ylabel("Hill number", fontsize=24)
+
+        ax2.fill_between(np.linspace(0, no_obs, no_obs),
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_estimate_d1")]["ci95_lo"],
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_estimate_d1")]["ci95_hi"],
+                         alpha=0.5)
+        ax2.plot(np.linspace(0, no_obs, no_obs),
+                 stats[(stats["species"] == species) & (stats["metric"] == "incidence_estimate_d1")]["mean"],
+                 label="Estimated")
+
+        ax2.fill_between(np.linspace(0, no_obs, no_obs),
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_sample_d1")]["ci95_lo"],
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_sample_d1")]["ci95_hi"],
+                         alpha=0.5)
+        ax2.plot(np.linspace(0, no_obs, no_obs),
+                 stats[(stats["species"] == species) & (stats["metric"] == "incidence_sample_d1")]["mean"],
+                 label="Observed")
+
+        ax2.axhline(true_values[species+"_incidence_estimate_d1"], color = "grey", ls="--")
+
+        ax2.set_xticks([0, no_obs], [0, int(obs_ids[-1])])
+        ax2.legend(fontsize=20)
+        ax2.set_title("q=1", fontsize=28)
+        ax2.set_xlabel("Sample Size", fontsize=24)
+
+        ax3.fill_between(np.linspace(0, no_obs, no_obs),
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_estimate_d2")]["ci95_lo"],
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_estimate_d2")]["ci95_hi"],
+                         alpha=0.5)
+        ax3.plot(np.linspace(0, no_obs, no_obs),
+                 stats[(stats["species"] == species) & (stats["metric"] == "incidence_estimate_d2")]["mean"],
+                 label="Estimated")
+
+        ax3.fill_between(np.linspace(0, no_obs, no_obs),
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_sample_d2")]["ci95_lo"],
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_sample_d2")]["ci95_hi"],
+                         alpha=0.5)
+        ax3.plot(np.linspace(0, no_obs, no_obs),
+                 stats[(stats["species"] == species) & (stats["metric"] == "incidence_sample_d2")]["mean"],
+                 label="Observed")
+
+        ax3.axhline(true_values[species+"_incidence_estimate_d2"], color = "grey", ls="--")
+
+        ax3.set_xticks([0, no_obs], [0, int(obs_ids[-1])])
+        ax3.legend(fontsize=20)
+        ax3.set_title("q=2", fontsize=28)
+        ax3.set_xlabel("Sample Size", fontsize=24)
+
+        plt.ylim(bottom=0)
+        plt.tight_layout()
+        plt.savefig("fig/"+name + "_" + species + "_diversity_profile.pdf", format="pdf")
+        #plt.show()
+        plt.close()
+
+        plt.rcParams['figure.figsize'] = [9, 5]
+        plt.rcParams['xtick.labelsize'] = 20
+        plt.rcParams['ytick.labelsize'] = 20
+
+        ### Completeness Profile
+        plt.fill_between(np.linspace(0, no_obs, no_obs),
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_c0")]["ci95_lo"],
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_c0")]["ci95_hi"],
+                         alpha=0.5)
+        plt.plot(np.linspace(0, no_obs, no_obs),
+                 stats[(stats["species"] == species) & (stats["metric"] == "incidence_c0")]["mean"],
+                 label="Completness")
+
+        plt.fill_between(np.linspace(0, no_obs, no_obs),
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_c1")]["ci95_lo"],
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_c1")]["ci95_hi"],
+                         alpha=0.5)
+        plt.plot(np.linspace(0, no_obs, no_obs),
+                 stats[(stats["species"] == species) & (stats["metric"] == "incidence_c1")]["mean"], label="Coverage")
+        plt.xticks([0, no_obs], [0, int(obs_ids[-1])])
+
+        plt.legend(fontsize=20)
+        plt.xlabel("Sample Size", fontsize=24)
+
+        plt.ylim(bottom=0)
+        plt.tight_layout()
+        plt.savefig("fig/"+name + "_" + species + "_completeness_profile.pdf", format="pdf")
+        #plt.show()
+        plt.close()
+
+        plt.rcParams['figure.figsize'] = [9, 5]
+        plt.rcParams['xtick.labelsize'] = 20
+        plt.rcParams['ytick.labelsize'] = 20
+
+        ### Sampling Effort
+        plt.fill_between(np.linspace(0, no_obs, no_obs),
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_l_0.99")]["ci95_lo"],
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_l_0.99")]["ci95_hi"],
+                         alpha=0.5)
+        plt.plot(np.linspace(0, no_obs, no_obs),
+                 stats[(stats["species"] == species) & (stats["metric"] == "incidence_l_0.99")]["mean"], label="l=.99")
+
+        plt.fill_between(np.linspace(0, no_obs, no_obs),
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_l_0.95")]["ci95_lo"],
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_l_0.95")]["ci95_hi"],
+                         alpha=0.5)
+        plt.plot(np.linspace(0, no_obs, no_obs),
+                 stats[(stats["species"] == species) & (stats["metric"] == "incidence_l_0.95")]["mean"], label="l=.95")
+
+        plt.fill_between(np.linspace(0, no_obs, no_obs),
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_l_0.9")]["ci95_lo"],
+                         stats[(stats["species"] == species) & (stats["metric"] == "incidence_l_0.9")]["ci95_hi"],
+                         alpha=0.5)
+        plt.plot(np.linspace(0, no_obs, no_obs),
+                 stats[(stats["species"] == species) & (stats["metric"] == "incidence_l_0.9")]["mean"], label="l=.90")
+        plt.xticks([0, no_obs], [0, int(obs_ids[-1])])
+
+        plt.legend(fontsize=20)
+        plt.xlabel("Sample Size", fontsize=24)
+
+        plt.ylim(bottom=0)
+        plt.tight_layout()
+        plt.savefig("fig/"+name + "_" + species     + "_effort.pdf", format="pdf")
+        #plt.show()
+        plt.close()
+
+true_values_net_3 ={
+    "1-gram_abundance_estimate_d0":9,
+    "1-gram_abundance_estimate_d1":9,
+    "1-gram_abundance_estimate_d2":9,
+    "1-gram_incidence_estimate_d0":9,
+    "1-gram_incidence_estimate_d1":9,
+    "1-gram_incidence_estimate_d2":9,
+    "2-gram_abundance_estimate_d0":81,
+    "2-gram_abundance_estimate_d1":81,
+    "2-gram_abundance_estimate_d2":81,
+    "2-gram_incidence_estimate_d0":81,
+    "2-gram_incidence_estimate_d1":81,
+    "2-gram_incidence_estimate_d2":81,
+    "3-gram_abundance_estimate_d0":729,
+    "3-gram_abundance_estimate_d1":729,
+    "3-gram_abundance_estimate_d2":729,
+    "3-gram_incidence_estimate_d0":729,
+    "3-gram_incidence_estimate_d1":729,
+    "3-gram_incidence_estimate_d2":729,
+    "4-gram_abundance_estimate_d0":6561,
+    "4-gram_abundance_estimate_d1":6561,
+    "4-gram_abundance_estimate_d2":6561,
+    "4-gram_incidence_estimate_d0":6561,
+    "4-gram_incidence_estimate_d1":6561,
+    "4-gram_incidence_estimate_d2":6551,
+    "5-gram_abundance_estimate_d0":59049,
+    "5-gram_abundance_estimate_d1":59049,
+    "5-gram_abundance_estimate_d2":59049,
+    "5-gram_incidence_estimate_d0":59049,
+    "5-gram_incidence_estimate_d1":59049,
+    "5-gram_incidence_estimate_d2":59049,
+    "tv_abundance_estimate_d0": math.inf,
+    "tv_abundance_estimate_d1": math.inf,
+    "tv_abundance_estimate_d2": math.inf,
+    "tv_incidence_estimate_d0": math.inf,
+    "tv_incidence_estimate_d1": math.inf,
+    "tv_incidence_estimate_d2": math.inf
+}
+
+true_values_net_7 ={
+    "1-gram_abundance_estimate_d0":9,
+    "1-gram_abundance_estimate_d1":7.70,
+    "1-gram_abundance_estimate_d2":6.63,
+    "1-gram_incidence_estimate_d0":9,
+    "1-gram_incidence_estimate_d1":8.36,
+    "1-gram_incidence_estimate_d2":7.81,
+    "2-gram_abundance_estimate_d0":18,
+    "2-gram_abundance_estimate_d1":15.66,
+    "2-gram_abundance_estimate_d2":12.90,
+    "2-gram_incidence_estimate_d0":18,
+    "2-gram_incidence_estimate_d1":15.86,
+    "2-gram_incidence_estimate_d2":14.39,
+    "3-gram_abundance_estimate_d0":33,
+    "3-gram_abundance_estimate_d1":26.92,
+    "3-gram_abundance_estimate_d2":22.85,
+    "3-gram_incidence_estimate_d0":33,
+    "3-gram_incidence_estimate_d1":27.91,
+    "3-gram_incidence_estimate_d2":24.73,
+    "4-gram_abundance_estimate_d0":55,
+    "4-gram_abundance_estimate_d1":43.10,
+    "4-gram_abundance_estimate_d2":34.84,
+    "4-gram_incidence_estimate_d0":55,
+    "4-gram_incidence_estimate_d1":44.10,
+    "4-gram_incidence_estimate_d2":36.42,
+    "5-gram_abundance_estimate_d0":85,
+    "5-gram_abundance_estimate_d1":66.72,
+    "5-gram_abundance_estimate_d2":54.35,
+    "5-gram_incidence_estimate_d0":85,
+    "5-gram_incidence_estimate_d1":67.90,
+    "5-gram_incidence_estimate_d2":56.40,
+    "tv_abundance_estimate_d0": math.inf,
+    "tv_abundance_estimate_d1": math.inf,
+    "tv_abundance_estimate_d2": math.inf,
+    "tv_incidence_estimate_d0": math.inf,
+    "tv_incidence_estimate_d1": math.inf,
+    "tv_incidence_estimate_d2": math.inf
+}
+
+true_values_net_8 ={
+    "1-gram_abundance_estimate_d0":9,
+    "1-gram_abundance_estimate_d1":9,
+    "1-gram_abundance_estimate_d2":9,
+    "1-gram_incidence_estimate_d0":9,
+    "1-gram_incidence_estimate_d1":9,
+    "1-gram_incidence_estimate_d2":9,
+    "2-gram_abundance_estimate_d0":72,
+    "2-gram_abundance_estimate_d1":72,
+    "2-gram_abundance_estimate_d2":72,
+    "2-gram_incidence_estimate_d0":72,
+    "2-gram_incidence_estimate_d1":72,
+    "2-gram_incidence_estimate_d2":72,
+    "3-gram_abundance_estimate_d0":504,
+    "3-gram_abundance_estimate_d1":504,
+    "3-gram_abundance_estimate_d2":504,
+    "3-gram_incidence_estimate_d0":504,
+    "3-gram_incidence_estimate_d1":504,
+    "3-gram_incidence_estimate_d2":504,
+    "4-gram_abundance_estimate_d0":3024,
+    "4-gram_abundance_estimate_d1":3024,
+    "4-gram_abundance_estimate_d2":3024,
+    "4-gram_incidence_estimate_d0":3024,
+    "4-gram_incidence_estimate_d1":3024,
+    "4-gram_incidence_estimate_d2":3024,
+    "5-gram_abundance_estimate_d0":15120,
+    "5-gram_abundance_estimate_d1":15120,
+    "5-gram_abundance_estimate_d2":15120,
+    "5-gram_incidence_estimate_d0":15120,
+    "5-gram_incidence_estimate_d1":15120,
+    "5-gram_incidence_estimate_d2":15120,
+    "tv_abundance_estimate_d0": 362880,
+    "tv_abundance_estimate_d1": 362880,
+    "tv_abundance_estimate_d2": 362880,
+    "tv_incidence_estimate_d0": 362880,
+    "tv_incidence_estimate_d1": 362880,
+    "tv_incidence_estimate_d2": 362880
+}
 
 #Used in Evaluation
-evaluate_model("../../models/model_3.pnml", "baseline_eval_model_3", 100, 2000)
-#evaluate_model("./models/model_7.pnml", "baseline_eval_model_7_LARGE", 100, 5000)
-#evaluate_model("./models/morel_8.pnml", "baseline_eval_model_8_LARGE", 100, 5000)
+evaluate_model("../../nets/net_3.pnml", "baseline_eval_model_3", 200, 1000, true_values_net_3)
+evaluate_model("../../nets/net_7.pnml", "baseline_eval_model_7", 200, 1000, true_values_net_7)
+evaluate_model("../../nets/net_8.pnml", "baseline_eval_model_8", 200, 1000, true_values_net_8)
+
+#Other nets
+#evaluate_model("./nets/model_1.pnml", "baseline_eval_model_1", 100, 2000)
+#evaluate_model("./nets/model_2.pnml", "baseline_eval_model_2", 100, 2000)
+#evaluate_model("./nets/model_4.pnml", "baseline_eval_model_4", 100, 1000)
+#evaluate_model("./nets/model_5.pnml", "baseline_eval_model_5", 100, 1000)
+#evaluate_model("./nets/model_6.pnml", "baseline_eval_model_6", 100, 1000)
